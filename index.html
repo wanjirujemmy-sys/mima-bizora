@@ -1,0 +1,142 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bizora | Welcome</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      font-family: Arial, sans-serif;
+      background: #f2f5fb;
+      color: #172033;
+    }
+    .card {
+      width: min(380px, 90%);
+      padding: 32px;
+      background: white;
+      border-radius: 18px;
+      box-shadow: 0 12px 40px #18254a12;
+      text-align: center;
+    }
+    h1 { color: #2859d6; margin-bottom: 8px; }
+    p { color: #647087; line-height: 1.5; }
+    input, button {
+      width: 100%;
+      padding: 13px;
+      margin-top: 12px;
+      border-radius: 9px;
+      font-size: 15px;
+    }
+    input { border: 1px solid #d8deea; }
+    button { border: 0; cursor: pointer; }
+    .primary { background: #2859d6; color: white; }
+    .google { background: white; border: 1px solid #d8deea; }
+    #message { overflow-wrap: anywhere; font-size: 13px; }
+    #dashboard { display: none; }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <section id="loginPanel">
+      <h1>Bizora</h1>
+      <p>Your business. Better organized.</p>
+
+      <button class="google" id="googleBtn">
+        Continue with Google
+      </button>
+
+      <p>Or use your email</p>
+      <form id="loginForm">
+        <input id="email" type="email"
+          placeholder="Email address" required>
+        <input id="password" type="password"
+          placeholder="Password (at least 6 characters)"
+          minlength="6" required>
+        <button class="primary" type="submit">Log In</button>
+      </form>
+
+      <button id="signupBtn">Create an Account</button>
+      <p id="message" role="status"></p>
+    </section>
+
+    <section id="dashboard">
+      <h2>Welcome to Bizora!</h2>
+      <p id="userEmail"></p>
+      <p>Your account is connected.</p>
+      <button class="primary" id="logoutBtn">Log Out</button>
+    </section>
+  </main>
+
+  <script type="module">
+    import { initializeApp } from
+      "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+    import {
+      getAuth, GoogleAuthProvider, signInWithPopup,
+      signInWithEmailAndPassword, createUserWithEmailAndPassword,
+      onAuthStateChanged, signOut
+    } from
+      "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+
+    // Replace these values with your Firebase Web App config.
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "bizora-5cb9a.firebaseapp.com",
+      projectId: "bizora-5cb9a",
+      appId: "YOUR_APP_ID"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const $ = id => document.getElementById(id);
+    const message = text => $("message").textContent = text;
+
+    $("googleBtn").onclick = async () => {
+      try {
+        await signInWithPopup(auth, new GoogleAuthProvider());
+      } catch (error) {
+        message(error.message);
+      }
+    };
+
+    $("loginForm").onsubmit = async event => {
+      event.preventDefault();
+      try {
+        await signInWithEmailAndPassword(
+          auth, $("email").value, $("password").value
+        );
+      } catch (error) {
+        message(error.message);
+      }
+    };
+
+    $("signupBtn").onclick = async () => {
+      if (!$("email").value || $("password").value.length < 6) {
+        message("Enter an email and a password of at least 6 characters.");
+        return;
+      }
+      try {
+        await createUserWithEmailAndPassword(
+          auth, $("email").value, $("password").value
+        );
+      } catch (error) {
+        message(error.message);
+      }
+    };
+
+    $("logoutBtn").onclick = () => signOut(auth);
+
+    onAuthStateChanged(auth, user => {
+      $("loginPanel").style.display = user ? "none" : "block";
+      $("dashboard").style.display = user ? "block" : "none";
+      if (user) $("userEmail").textContent =
+        user.email || user.displayName || "Signed in";
+    });
+  </script>
+</body>
+</html>
