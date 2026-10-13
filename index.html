@@ -1,147 +1,584 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Bizora | Business Management</title>
+
   <style>
     * { box-sizing: border-box; }
 
+    :root {
+      --blue: #2859d6;
+      --dark: #172033;
+      --muted: #647087;
+      --background: #f4f6fb;
+      --border: #e2e7f0;
+      --white: #ffffff;
+    }
+
     body {
       margin: 0;
+      font-family: Arial, sans-serif;
+      color: var(--dark);
+      background: var(--background);
+    }
+
+    button, input, select {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: wait;
+    }
+
+    .hidden { display: none !important; }
+
+    .auth-page {
       min-height: 100vh;
       display: grid;
       place-items: center;
       padding: 20px;
-      font-family: Arial, sans-serif;
-      background: #f2f5fb;
-      color: #172033;
     }
 
-    .card {
-      width: min(460px, 100%);
-      padding: 30px;
-      background: white;
+    .auth-card {
+      width: min(420px, 100%);
+      padding: 32px;
+      background: var(--white);
       border-radius: 18px;
       box-shadow: 0 12px 40px #18254a12;
     }
 
-    h1 { color: #2859d6; margin-bottom: 8px; }
-    h2 { margin-top: 0; }
-    p { color: #647087; line-height: 1.5; }
+    h1, h2, h3, p { margin-top: 0; }
 
-    input, select, button {
-      width: 100%;
-      padding: 13px;
-      margin-top: 12px;
-      border-radius: 9px;
-      font-size: 15px;
+    .brand {
+      color: var(--blue);
+      font-size: 28px;
+      font-weight: 800;
+      margin-bottom: 8px;
     }
 
-    input, select { border: 1px solid #d8deea; background: white; }
-    button { border: 0; cursor: pointer; }
-    button:disabled { opacity: 0.6; cursor: wait; }
+    .muted { color: var(--muted); line-height: 1.5; }
 
-    .primary { background: #2859d6; color: white; }
-    .google { background: white; border: 1px solid #d8deea; }
-    .secondary { background: #edf1fa; color: #172033; }
+    input, select {
+      width: 100%;
+      padding: 12px;
+      margin-top: 7px;
+      border: 1px solid #d8deea;
+      border-radius: 9px;
+      background: white;
+    }
 
     label {
       display: block;
-      text-align: left;
+      margin-top: 16px;
       font-size: 14px;
-      font-weight: bold;
-      margin-top: 15px;
+      font-weight: 600;
     }
 
-    label input, label select { margin-top: 7px; }
-    #dashboard { display: none; }
-    #message, #profileMessage {
-      overflow-wrap: anywhere;
-      font-size: 13px;
+    .btn {
+      padding: 12px 15px;
+      border: 0;
+      border-radius: 9px;
+      font-weight: 600;
     }
-    .hint { font-size: 12px; }
+
+    .primary { background: var(--blue); color: white; }
+    .secondary { background: #edf1fa; color: var(--dark); }
+    .outline { background: white; border: 1px solid var(--border); }
+
+    .full { width: 100%; margin-top: 12px; }
+
+    #message, #profileMessage {
+      font-size: 13px;
+      overflow-wrap: anywhere;
+      margin-top: 14px;
+    }
+
+    /* Main application */
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 235px minmax(0, 1fr);
+    }
+
+    .sidebar {
+      background: white;
+      border-right: 1px solid var(--border);
+      padding: 26px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .sidebar .brand { padding-left: 12px; }
+
+    .nav {
+      display: grid;
+      gap: 7px;
+    }
+
+    .nav button {
+      width: 100%;
+      text-align: left;
+      padding: 12px;
+      border: 0;
+      border-radius: 9px;
+      color: #536078;
+      background: transparent;
+    }
+
+    .nav button.active {
+      color: var(--blue);
+      background: #edf2ff;
+      font-weight: 700;
+    }
+
+    .sidebar-bottom {
+      margin-top: auto;
+      border-top: 1px solid var(--border);
+      padding-top: 18px;
+    }
+
+    .workspace { min-width: 0; }
+
+    .topbar {
+      min-height: 76px;
+      background: white;
+      border-bottom: 1px solid var(--border);
+      padding: 18px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .topbar p {
+      margin: 4px 0 0;
+      font-size: 13px;
+      color: var(--muted);
+      overflow-wrap: anywhere;
+    }
+
+    .content {
+      max-width: 1200px;
+      margin: auto;
+      padding: 30px;
+    }
+
+    .page-heading {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+
+    .page-heading h1 {
+      font-size: 27px;
+      margin-bottom: 8px;
+    }
+
+    .page-heading p {
+      color: var(--muted);
+      margin-bottom: 0;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+      margin-bottom: 25px;
+    }
+
+    .panel, .stat-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 22px;
+      min-width: 0;
+    }
+
+    .stat-label {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+
+    .stat-value {
+      font-size: clamp(21px, 2.5vw, 29px);
+      font-weight: 750;
+      overflow-wrap: anywhere;
+      margin-bottom: 8px;
+    }
+
+    .stat-note {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 0;
+    }
+
+    .section-title {
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+
+    .quick-actions {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .action-card {
+      text-align: left;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+      color: var(--dark);
+    }
+
+    .action-card strong {
+      display: block;
+      margin-bottom: 7px;
+    }
+
+    .action-card span {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .profile-form { max-width: 600px; }
+
+    .profile-form .btn { margin-top: 20px; }
+
+    .status {
+      margin-top: 15px;
+      font-size: 13px;
+      color: var(--muted);
+      overflow-wrap: anywhere;
+    }
+
+    .mobile-brand { display: none; }
+
+    @media (max-width: 850px) {
+      .app { grid-template-columns: 1fr; }
+
+      .sidebar {
+        padding: 14px;
+        border-right: 0;
+        border-bottom: 1px solid var(--border);
+        gap: 12px;
+      }
+
+      .sidebar .brand { display: none; }
+      .sidebar-bottom { display: none; }
+
+      .nav {
+        display: flex;
+        overflow-x: auto;
+        gap: 5px;
+      }
+
+      .nav button {
+        white-space: nowrap;
+        width: auto;
+      }
+
+      .mobile-brand { display: block; }
+
+      .content { padding: 22px 16px; }
+      .topbar { padding: 16px; }
+    }
+
+    @media (max-width: 600px) {
+      .cards { grid-template-columns: 1fr; gap: 12px; }
+      .quick-actions { grid-template-columns: 1fr; }
+      .stat-card, .panel { padding: 18px; }
+      .auth-card { padding: 24px; }
+      .topbar { align-items: flex-start; }
+      .topbar p { max-width: 220px; }
+    }
   </style>
 </head>
 
 <body>
-  <main class="card">
-    <section id="loginPanel">
-      <h1>Bizora</h1>
-      <p>Your business. Better organized.</p>
 
-      <button class="google" id="googleBtn" type="button">
+  <!-- LOGIN AND SIGNUP -->
+  <section id="loginPanel" class="auth-page">
+    <div class="auth-card">
+      <div class="brand">Bizora</div>
+      <p class="muted">Your business. Better organized.</p>
+
+      <button class="btn outline full" id="googleBtn" type="button">
         Continue with Google
       </button>
 
-      <p>Or use your email</p>
+      <p class="muted" style="text-align:center;margin:20px 0 0;">
+        Or use your email
+      </p>
 
       <form id="loginForm">
-        <input id="email" type="email"
-          placeholder="Email address" required>
+        <label for="email">Email address</label>
+        <input id="email" type="email" required
+          placeholder="you@example.com">
 
-        <input id="password" type="password"
-          placeholder="Password (at least 6 characters)"
-          minlength="6" required>
+        <label for="password">Password</label>
+        <input id="password" type="password" minlength="6"
+          required placeholder="At least 6 characters">
 
-        <button class="primary" type="submit">Log In</button>
+        <button class="btn primary full" type="submit">Log In</button>
       </form>
 
-      <button class="secondary" id="signupBtn" type="button">
+      <button class="btn secondary full" id="signupBtn" type="button">
         Create an Account
       </button>
 
       <p id="message" role="status"></p>
-    </section>
+    </div>
+  </section>
 
-    <section id="dashboard">
-      <h1>Bizora</h1>
-      <h2>Business setup</h2>
-      <p id="userEmail"></p>
-      <p>Tell us about your business. Your profile will be saved securely.</p>
+  <!-- BUSINESS APPLICATION -->
+  <div id="appPanel" class="app hidden">
 
-      <form id="profileForm">
-        <label for="businessName">Business name</label>
-        <input id="businessName" type="text"
-          placeholder="e.g. Mimah Fashion Store" required>
+    <aside class="sidebar">
+      <div class="brand">Bizora</div>
 
-        <label for="industry">Business industry</label>
-        <select id="industry" required>
-          <option value="">Choose an industry</option>
-          <option value="construction">Construction and projects</option>
-          <option value="retail">Shops and retail</option>
-          <option value="salon">Salons and beauty</option>
-          <option value="hospitality">Hotels and hospitality</option>
-          <option value="professional">Professional services</option>
-          <option value="other">Other</option>
-        </select>
-
-        <label for="currency">Business currency</label>
-        <select id="currency" required>
-          <option value="KES">KES — Kenyan Shilling</option>
-          <option value="USD">USD — US Dollar</option>
-          <option value="TZS">TZS — Tanzanian Shilling</option>
-          <option value="UGX">UGX — Ugandan Shilling</option>
-          <option value="RWF">RWF — Rwandan Franc</option>
-          <option value="ZAR">ZAR — South African Rand</option>
-          <option value="GBP">GBP — British Pound</option>
-          <option value="EUR">EUR — Euro</option>
-        </select>
-
-        <button class="primary" id="saveBtn" type="submit">
-          Save Business Profile
+      <nav class="nav" aria-label="Main navigation">
+        <button type="button" class="active" data-view="overview">
+          ◫ &nbsp; Overview
         </button>
-      </form>
+        <button type="button" data-view="profile">
+          ⚙ &nbsp; Business Profile
+        </button>
+        <button type="button" data-view="transactions">
+          ⇄ &nbsp; Transactions
+        </button>
+        <button type="button" data-view="inventory">
+          ▦ &nbsp; Inventory
+        </button>
+        <button type="button" data-view="customers">
+          ♙ &nbsp; Customers
+        </button>
+        <button type="button" data-view="reports">
+          ▤ &nbsp; Reports
+        </button>
+      </nav>
 
-      <p id="profileMessage" role="status"></p>
-      <p class="hint">Your profile is linked to your signed-in account.</p>
+      <div class="sidebar-bottom">
+        <button class="btn secondary full" id="logoutBtn" type="button">
+          Log Out
+        </button>
+      </div>
+    </aside>
 
-      <button class="secondary" id="logoutBtn" type="button">
-        Log Out
-      </button>
-    </section>
-  </main>
+    <div class="workspace">
+      <header class="topbar">
+        <div>
+          <strong class="mobile-brand" style="color:#2859d6;">Bizora</strong>
+          <div id="topBusinessName"><strong>My Business</strong></div>
+          <p id="userEmail"></p>
+        </div>
+
+        <button class="btn outline" id="topProfileBtn" type="button">
+          Business Profile
+        </button>
+      </header>
+
+      <main class="content">
+
+        <!-- OVERVIEW -->
+        <section id="view-overview" class="view">
+          <div class="page-heading">
+            <div>
+              <h1>Business Overview</h1>
+              <p>Here is your business at a glance.</p>
+            </div>
+            <button class="btn primary" id="editProfileBtn" type="button">
+              Edit Business Profile
+            </button>
+          </div>
+
+          <div class="cards">
+            <article class="stat-card">
+              <div class="stat-label">Total Income</div>
+              <div class="stat-value" id="incomeTotal">KES 0.00</div>
+              <p class="stat-note">Income records will appear here.</p>
+            </article>
+
+            <article class="stat-card">
+              <div class="stat-label">Total Expenses</div>
+              <div class="stat-value" id="expenseTotal">KES 0.00</div>
+              <p class="stat-note">Expense records will appear here.</p>
+            </article>
+
+            <article class="stat-card">
+              <div class="stat-label">Balance</div>
+              <div class="stat-value" id="balanceTotal">KES 0.00</div>
+              <p class="stat-note">Income minus expenses.</p>
+            </article>
+          </div>
+
+          <section class="panel">
+            <h2 class="section-title">Quick Actions</h2>
+            <p class="muted">
+              Your business tools will grow as we build each module.
+            </p>
+
+            <div class="quick-actions">
+              <button class="action-card" type="button"
+                data-view="transactions">
+                <strong>＋ Transactions</strong>
+                <span>Prepare to record income and expenses.</span>
+              </button>
+
+              <button class="action-card" type="button"
+                data-view="inventory">
+                <strong>▦ Inventory</strong>
+                <span>Manage products and stock in a future update.</span>
+              </button>
+
+              <button class="action-card" type="button"
+                data-view="reports">
+                <strong>▤ Reports</strong>
+                <span>Review business summaries in a future update.</span>
+              </button>
+            </div>
+          </section>
+
+          <p class="status" id="dashboardMessage" role="status"></p>
+        </section>
+
+        <!-- BUSINESS PROFILE -->
+        <section id="view-profile" class="view hidden">
+          <div class="page-heading">
+            <div>
+              <h1>Business Profile</h1>
+              <p>Update the information connected to your account.</p>
+            </div>
+          </div>
+
+          <section class="panel">
+            <form id="profileForm" class="profile-form">
+              <label for="businessName">Business name</label>
+              <input id="businessName" type="text"
+                placeholder="e.g. Mimah Fashion Store" required>
+
+              <label for="industry">Business industry</label>
+              <select id="industry" required>
+                <option value="">Choose an industry</option>
+                <option value="construction">Construction and projects</option>
+                <option value="retail">Shops and retail</option>
+                <option value="salon">Salons and beauty</option>
+                <option value="hospitality">Hotels and hospitality</option>
+                <option value="professional">Professional services</option>
+                <option value="other">Other</option>
+              </select>
+
+              <label for="currency">Business currency</label>
+              <select id="currency" required>
+                <option value="KES">KES — Kenyan Shilling</option>
+                <option value="USD">USD — US Dollar</option>
+                <option value="TZS">TZS — Tanzanian Shilling</option>
+                <option value="UGX">UGX — Ugandan Shilling</option>
+                <option value="RWF">RWF — Rwandan Franc</option>
+                <option value="ZAR">ZAR — South African Rand</option>
+                <option value="GBP">GBP — British Pound</option>
+                <option value="EUR">EUR — Euro</option>
+              </select>
+
+              <button class="btn primary" id="saveBtn" type="submit">
+                Save Business Profile
+              </button>
+
+              <button class="btn secondary" id="cancelProfileBtn"
+                type="button" style="margin-left:8px;">
+                Cancel
+              </button>
+            </form>
+
+            <p class="status" id="profileMessage" role="status"></p>
+          </section>
+        </section>
+
+        <!-- FUTURE MODULES -->
+        <section id="view-transactions" class="view hidden">
+          <div class="page-heading">
+            <div>
+              <h1>Transactions</h1>
+              <p>Your income and expense records will live here.</p>
+            </div>
+          </div>
+          <section class="panel">
+            <h2 class="section-title">Income & Expenses</h2>
+            <p class="muted">
+              This is the next module we will build. It will let you add,
+              view, search, edit, and delete financial records stored
+              securely in Firestore.
+            </p>
+          </section>
+        </section>
+
+        <section id="view-inventory" class="view hidden">
+          <div class="page-heading">
+            <div>
+              <h1>Inventory</h1>
+              <p>Keep track of products and stock.</p>
+            </div>
+          </div>
+          <section class="panel">
+            <h2 class="section-title">Inventory Management</h2>
+            <p class="muted">
+              This module will support products, quantities, stock levels,
+              and prices in a future update.
+            </p>
+          </section>
+        </section>
+
+        <section id="view-customers" class="view hidden">
+          <div class="page-heading">
+            <div>
+              <h1>Customers</h1>
+              <p>Keep your customer information organized.</p>
+            </div>
+          </div>
+          <section class="panel">
+            <h2 class="section-title">Customer Records</h2>
+            <p class="muted">
+              Customer profiles and contact records will be added in a
+              future update.
+            </p>
+          </section>
+        </section>
+
+        <section id="view-reports" class="view hidden">
+          <div class="page-heading">
+            <div>
+              <h1>Reports</h1>
+              <p>Understand how your business is performing.</p>
+            </div>
+          </div>
+          <section class="panel">
+            <h2 class="section-title">Business Reports</h2>
+            <p class="muted">
+              Reports will use your actual saved records once the
+              transaction module is ready.
+            </p>
+          </section>
+        </section>
+
+      </main>
+    </div>
+  </div>
 
   <script type="module">
     import { initializeApp } from
@@ -182,81 +619,147 @@
     const db = getFirestore(app);
 
     const $ = id => document.getElementById(id);
-    const message = text => $("message").textContent = text;
-    const profileMessage =
-      text => $("profileMessage").textContent = text;
 
-    $("googleBtn").onclick = async () => {
+    let currentProfile = null;
+    let currentView = "overview";
+
+    function showMessage(id, text) {
+      $(id).textContent = text;
+    }
+
+    function showView(view) {
+      const profile = currentProfile;
+
+      if (!profile && view !== "profile") {
+        view = "profile";
+      }
+
+      currentView = view;
+
+      document.querySelectorAll(".view").forEach(section => {
+        section.classList.toggle(
+          "hidden",
+          section.id !== "view-" + view
+        );
+      });
+
+      document.querySelectorAll("[data-view]").forEach(button => {
+        button.classList.toggle(
+          "active",
+          button.dataset.view === view
+        );
+      });
+    }
+
+    function updateDashboard(profile) {
+      const currency = profile.currency || "KES";
+      const name = profile.businessName || "My Business";
+
+      $("topBusinessName").textContent = name;
+      $("incomeTotal").textContent =
+        currency + " " + (0).toLocaleString("en-KE", {
+          minimumFractionDigits: 2
+        });
+      $("expenseTotal").textContent =
+        currency + " " + (0).toLocaleString("en-KE", {
+          minimumFractionDigits: 2
+        });
+      $("balanceTotal").textContent =
+        currency + " " + (0).toLocaleString("en-KE", {
+          minimumFractionDigits: 2
+        });
+    }
+
+    function fillProfile(profile = {}) {
+      $("businessName").value = profile.businessName || "";
+      $("industry").value = profile.industry || "";
+      $("currency").value = profile.currency || "KES";
+    }
+
+    async function loadProfile(user) {
+      showMessage("dashboardMessage", "Loading your business...");
+      showMessage("profileMessage", "");
+
       try {
-        message("");
+        const profileRef = doc(db, "users", user.uid);
+        const snapshot = await getDoc(profileRef);
+
+        if (snapshot.exists()) {
+          currentProfile = snapshot.data();
+          fillProfile(currentProfile);
+          updateDashboard(currentProfile);
+          showView("overview");
+          showMessage("dashboardMessage", "");
+        } else {
+          currentProfile = null;
+          fillProfile();
+          showView("profile");
+          showMessage(
+            "profileMessage",
+            "Welcome! Complete your business profile to get started."
+          );
+        }
+      } catch (error) {
+        console.error(error);
+        showMessage(
+          "dashboardMessage",
+          "Could not load your profile. Please refresh and try again."
+        );
+        showView("profile");
+        showMessage("profileMessage", error.message);
+      }
+    }
+
+    $("googleBtn").addEventListener("click", async () => {
+      showMessage("message", "");
+      try {
         await signInWithPopup(auth, new GoogleAuthProvider());
       } catch (error) {
-        message(error.message);
+        showMessage("message", error.message);
       }
-    };
+    });
 
-    $("loginForm").onsubmit = async event => {
+    $("loginForm").addEventListener("submit", async event => {
       event.preventDefault();
+      showMessage("message", "");
+
       try {
-        message("");
         await signInWithEmailAndPassword(
-          auth, $("email").value.trim(), $("password").value
+          auth,
+          $("email").value.trim(),
+          $("password").value
         );
       } catch (error) {
-        message(error.message);
+        showMessage("message", error.message);
       }
-    };
+    });
 
-    $("signupBtn").onclick = async () => {
+    $("signupBtn").addEventListener("click", async () => {
       const email = $("email").value.trim();
       const password = $("password").value;
 
       if (!email || password.length < 6) {
-        message("Enter an email and a password of at least 6 characters.");
+        showMessage(
+          "message",
+          "Enter an email and a password of at least 6 characters."
+        );
         return;
       }
 
       try {
-        message("");
+        showMessage("message", "");
         await createUserWithEmailAndPassword(auth, email, password);
       } catch (error) {
-        message(error.message);
+        showMessage("message", error.message);
       }
-    };
+    });
 
-    async function loadProfile(user) {
-      profileMessage("Loading your business profile...");
-
-      try {
-        const profileRef = doc(db, "users", user.uid);
-        const profileSnap = await getDoc(profileRef);
-
-        if (profileSnap.exists()) {
-          const data = profileSnap.data();
-          $("businessName").value = data.businessName || "";
-          $("industry").value = data.industry || "";
-          $("currency").value = data.currency || "KES";
-          profileMessage("Your saved profile has been loaded.");
-        } else {
-          $("businessName").value = "";
-          $("industry").value = "";
-          $("currency").value = "KES";
-          profileMessage("Create your first business profile.");
-        }
-      } catch (error) {
-        console.error(error);
-        profileMessage(
-          "Could not load your profile. Please check your connection and database rules."
-        );
-      }
-    }
-
-    $("profileForm").onsubmit = async event => {
+    $("profileForm").addEventListener("submit", async event => {
       event.preventDefault();
 
       const user = auth.currentUser;
       if (!user) {
-        profileMessage("Please log in again.");
+        showMessage("profileMessage", "Please log in again.");
         return;
       }
 
@@ -265,14 +768,14 @@
       const currency = $("currency").value;
 
       if (!businessName || !industry || !currency) {
-        profileMessage("Please complete all business details.");
+        showMessage("profileMessage", "Complete all fields first.");
         return;
       }
 
       const saveBtn = $("saveBtn");
       saveBtn.disabled = true;
       saveBtn.textContent = "Saving...";
-      profileMessage("");
+      showMessage("profileMessage", "");
 
       try {
         const profileRef = doc(db, "users", user.uid);
@@ -286,39 +789,89 @@
           updatedAt: serverTimestamp()
         }, { merge: true });
 
-        profileMessage("Business profile saved successfully!");
+        currentProfile = {
+          ...currentProfile,
+          uid: user.uid,
+          email: user.email || "",
+          businessName,
+          industry,
+          currency
+        };
+
+        updateDashboard(currentProfile);
+        showMessage("profileMessage", "Profile saved successfully!");
+        showView("overview");
       } catch (error) {
         console.error(error);
-        profileMessage(
+        showMessage(
+          "profileMessage",
           "Could not save your profile: " + error.message
         );
       } finally {
         saveBtn.disabled = false;
         saveBtn.textContent = "Save Business Profile";
       }
-    };
+    });
 
-    $("logoutBtn").onclick = async () => {
+    document.querySelectorAll("[data-view]").forEach(button => {
+      button.addEventListener("click", () => {
+        const view = button.dataset.view;
+
+        if (view === "profile") {
+          fillProfile(currentProfile || {});
+          showMessage("profileMessage", "");
+        }
+
+        showView(view);
+      });
+    });
+
+    $("editProfileBtn").addEventListener("click", () => {
+      fillProfile(currentProfile || {});
+      showMessage("profileMessage", "");
+      showView("profile");
+    });
+
+    $("topProfileBtn").addEventListener("click", () => {
+      fillProfile(currentProfile || {});
+      showMessage("profileMessage", "");
+      showView("profile");
+    });
+
+    $("cancelProfileBtn").addEventListener("click", () => {
+      if (currentProfile) {
+        fillProfile(currentProfile);
+        showView("overview");
+      } else {
+        showMessage(
+          "profileMessage",
+          "Please complete your business profile first."
+        );
+      }
+    });
+
+    $("logoutBtn").addEventListener("click", async () => {
       try {
         await signOut(auth);
       } catch (error) {
-        profileMessage(error.message);
+        showMessage("dashboardMessage", error.message);
       }
-    };
+    });
 
     onAuthStateChanged(auth, async user => {
-      $("loginPanel").style.display = user ? "none" : "block";
-      $("dashboard").style.display = user ? "block" : "none";
+      $("loginPanel").classList.toggle("hidden", !!user);
+      $("appPanel").classList.toggle("hidden", !user);
 
       if (user) {
         $("userEmail").textContent =
           user.email || user.displayName || "Signed in";
         await loadProfile(user);
       } else {
-        profileMessage("");
+        currentProfile = null;
+        fillProfile();
+        showMessage("message", "");
       }
     });
   </script>
 </body>
 </html>
-
