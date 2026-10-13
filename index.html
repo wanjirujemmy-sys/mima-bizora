@@ -4,105 +4,191 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bizora | Welcome</title>
+  <title>Bizora | Business Management</title>
   <style>
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
       min-height: 100vh;
       display: grid;
       place-items: center;
+      padding: 20px;
       font-family: Arial, sans-serif;
       background: #f2f5fb;
       color: #172033;
     }
+
     .card {
-      width: min(380px, 90%);
-      padding: 32px;
+      width: min(460px, 100%);
+      padding: 30px;
       background: white;
       border-radius: 18px;
       box-shadow: 0 12px 40px #18254a12;
-      text-align: center;
     }
+
     h1 { color: #2859d6; margin-bottom: 8px; }
+    h2 { margin-top: 0; }
     p { color: #647087; line-height: 1.5; }
-    input, button {
+
+    input, select, button {
       width: 100%;
       padding: 13px;
       margin-top: 12px;
       border-radius: 9px;
       font-size: 15px;
     }
-    input { border: 1px solid #d8deea; }
+
+    input, select { border: 1px solid #d8deea; background: white; }
     button { border: 0; cursor: pointer; }
+    button:disabled { opacity: 0.6; cursor: wait; }
+
     .primary { background: #2859d6; color: white; }
     .google { background: white; border: 1px solid #d8deea; }
-    #message { overflow-wrap: anywhere; font-size: 13px; }
+    .secondary { background: #edf1fa; color: #172033; }
+
+    label {
+      display: block;
+      text-align: left;
+      font-size: 14px;
+      font-weight: bold;
+      margin-top: 15px;
+    }
+
+    label input, label select { margin-top: 7px; }
     #dashboard { display: none; }
+    #message, #profileMessage {
+      overflow-wrap: anywhere;
+      font-size: 13px;
+    }
+    .hint { font-size: 12px; }
   </style>
 </head>
+
 <body>
   <main class="card">
     <section id="loginPanel">
       <h1>Bizora</h1>
       <p>Your business. Better organized.</p>
 
-      <button class="google" id="googleBtn">
+      <button class="google" id="googleBtn" type="button">
         Continue with Google
       </button>
 
       <p>Or use your email</p>
+
       <form id="loginForm">
         <input id="email" type="email"
           placeholder="Email address" required>
+
         <input id="password" type="password"
           placeholder="Password (at least 6 characters)"
           minlength="6" required>
+
         <button class="primary" type="submit">Log In</button>
       </form>
 
-      <button id="signupBtn">Create an Account</button>
+      <button class="secondary" id="signupBtn" type="button">
+        Create an Account
+      </button>
+
       <p id="message" role="status"></p>
     </section>
 
     <section id="dashboard">
-      <h2>Welcome to Bizora!</h2>
+      <h1>Bizora</h1>
+      <h2>Business setup</h2>
       <p id="userEmail"></p>
-      <p>Your account is connected.</p>
-      <button class="primary" id="logoutBtn">Log Out</button>
+      <p>Tell us about your business. Your profile will be saved securely.</p>
+
+      <form id="profileForm">
+        <label for="businessName">Business name</label>
+        <input id="businessName" type="text"
+          placeholder="e.g. Mimah Fashion Store" required>
+
+        <label for="industry">Business industry</label>
+        <select id="industry" required>
+          <option value="">Choose an industry</option>
+          <option value="construction">Construction and projects</option>
+          <option value="retail">Shops and retail</option>
+          <option value="salon">Salons and beauty</option>
+          <option value="hospitality">Hotels and hospitality</option>
+          <option value="professional">Professional services</option>
+          <option value="other">Other</option>
+        </select>
+
+        <label for="currency">Business currency</label>
+        <select id="currency" required>
+          <option value="KES">KES — Kenyan Shilling</option>
+          <option value="USD">USD — US Dollar</option>
+          <option value="TZS">TZS — Tanzanian Shilling</option>
+          <option value="UGX">UGX — Ugandan Shilling</option>
+          <option value="RWF">RWF — Rwandan Franc</option>
+          <option value="ZAR">ZAR — South African Rand</option>
+          <option value="GBP">GBP — British Pound</option>
+          <option value="EUR">EUR — Euro</option>
+        </select>
+
+        <button class="primary" id="saveBtn" type="submit">
+          Save Business Profile
+        </button>
+      </form>
+
+      <p id="profileMessage" role="status"></p>
+      <p class="hint">Your profile is linked to your signed-in account.</p>
+
+      <button class="secondary" id="logoutBtn" type="button">
+        Log Out
+      </button>
     </section>
   </main>
 
   <script type="module">
     import { initializeApp } from
       "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+
     import {
-      getAuth, GoogleAuthProvider, signInWithPopup,
-      signInWithEmailAndPassword, createUserWithEmailAndPassword,
-      onAuthStateChanged, signOut
+      getAuth,
+      GoogleAuthProvider,
+      signInWithPopup,
+      signInWithEmailAndPassword,
+      createUserWithEmailAndPassword,
+      onAuthStateChanged,
+      signOut
     } from
       "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
 
-    // Replace these values with your Firebase Web App config.
-   
-const firebaseConfig = {
-  apiKey: "AIzaSyCgVfPDwrdICBQIoyvvO_eJQqKcLRWZJbU",
-  authDomain: "bizora-5cb9a.firebaseapp.com",
-  projectId: "bizora-5cb9a",
-  storageBucket: "bizora-5cb9a.firebasestorage.app",
-  messagingSenderId: "618099051671",
-  appId: "1:618099051671:web:9ddf2a783824456d202dd2",
-  measurementId: "G-GB30LFCXFC"
-};
+    import {
+      getFirestore,
+      doc,
+      getDoc,
+      setDoc,
+      serverTimestamp
+    } from
+      "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
 
+    const firebaseConfig = {
+      apiKey: "AIzaSyCgVfPDwrdICBQIoyvvO_eJQqKcLRWZJbU",
+      authDomain: "bizora-5cb9a.firebaseapp.com",
+      projectId: "bizora-5cb9a",
+      storageBucket: "bizora-5cb9a.firebasestorage.app",
+      messagingSenderId: "618099051671",
+      appId: "1:618099051671:web:9ddf2a783824456d202dd2",
+      measurementId: "G-GB30LFCXFC"
+    };
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    const db = getFirestore(app);
+
     const $ = id => document.getElementById(id);
     const message = text => $("message").textContent = text;
+    const profileMessage =
+      text => $("profileMessage").textContent = text;
 
     $("googleBtn").onclick = async () => {
       try {
+        message("");
         await signInWithPopup(auth, new GoogleAuthProvider());
       } catch (error) {
         message(error.message);
@@ -112,8 +198,9 @@ const firebaseConfig = {
     $("loginForm").onsubmit = async event => {
       event.preventDefault();
       try {
+        message("");
         await signInWithEmailAndPassword(
-          auth, $("email").value, $("password").value
+          auth, $("email").value.trim(), $("password").value
         );
       } catch (error) {
         message(error.message);
@@ -121,27 +208,117 @@ const firebaseConfig = {
     };
 
     $("signupBtn").onclick = async () => {
-      if (!$("email").value || $("password").value.length < 6) {
+      const email = $("email").value.trim();
+      const password = $("password").value;
+
+      if (!email || password.length < 6) {
         message("Enter an email and a password of at least 6 characters.");
         return;
       }
+
       try {
-        await createUserWithEmailAndPassword(
-          auth, $("email").value, $("password").value
-        );
+        message("");
+        await createUserWithEmailAndPassword(auth, email, password);
       } catch (error) {
         message(error.message);
       }
     };
 
-    $("logoutBtn").onclick = () => signOut(auth);
+    async function loadProfile(user) {
+      profileMessage("Loading your business profile...");
 
-    onAuthStateChanged(auth, user => {
+      try {
+        const profileRef = doc(db, "users", user.uid);
+        const profileSnap = await getDoc(profileRef);
+
+        if (profileSnap.exists()) {
+          const data = profileSnap.data();
+          $("businessName").value = data.businessName || "";
+          $("industry").value = data.industry || "";
+          $("currency").value = data.currency || "KES";
+          profileMessage("Your saved profile has been loaded.");
+        } else {
+          $("businessName").value = "";
+          $("industry").value = "";
+          $("currency").value = "KES";
+          profileMessage("Create your first business profile.");
+        }
+      } catch (error) {
+        console.error(error);
+        profileMessage(
+          "Could not load your profile. Please check your connection and database rules."
+        );
+      }
+    }
+
+    $("profileForm").onsubmit = async event => {
+      event.preventDefault();
+
+      const user = auth.currentUser;
+      if (!user) {
+        profileMessage("Please log in again.");
+        return;
+      }
+
+      const businessName = $("businessName").value.trim();
+      const industry = $("industry").value;
+      const currency = $("currency").value;
+
+      if (!businessName || !industry || !currency) {
+        profileMessage("Please complete all business details.");
+        return;
+      }
+
+      const saveBtn = $("saveBtn");
+      saveBtn.disabled = true;
+      saveBtn.textContent = "Saving...";
+      profileMessage("");
+
+      try {
+        const profileRef = doc(db, "users", user.uid);
+
+        await setDoc(profileRef, {
+          uid: user.uid,
+          email: user.email || "",
+          businessName,
+          industry,
+          currency,
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+
+        profileMessage("Business profile saved successfully!");
+      } catch (error) {
+        console.error(error);
+        profileMessage(
+          "Could not save your profile: " + error.message
+        );
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = "Save Business Profile";
+      }
+    };
+
+    $("logoutBtn").onclick = async () => {
+      try {
+        await signOut(auth);
+      } catch (error) {
+        profileMessage(error.message);
+      }
+    };
+
+    onAuthStateChanged(auth, async user => {
       $("loginPanel").style.display = user ? "none" : "block";
       $("dashboard").style.display = user ? "block" : "none";
-      if (user) $("userEmail").textContent =
-        user.email || user.displayName || "Signed in";
+
+      if (user) {
+        $("userEmail").textContent =
+          user.email || user.displayName || "Signed in";
+        await loadProfile(user);
+      } else {
+        profileMessage("");
+      }
     });
   </script>
 </body>
 </html>
+
