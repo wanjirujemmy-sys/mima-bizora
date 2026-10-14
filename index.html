@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bizora | Business Management</title>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    :root {
+      --blue: #2859d6;
+      --dark: #172033;
+      --muted: #647087;
+      --background: #f4f6fb;
+      --border: #e2e7f0;
+      --white: #ffffff;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      color: var(--dark);
+      background: var(--background);
+    }
+
+    button, input, select {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: wait;
+    }
+
+    .hidden { display: none !important; }
+
+    .auth-page {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+    }
+
+    .auth-card {
+      width: min(420px, 100%);
+      padding: 32px;
+      background: var(--white);
+      border-radius: 18px;
+      box-shadow: 0 12px 40px #18254a12;
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+
+    .brand {
+      color: var(--blue);
+      font-size: 28px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .muted { color: var(--muted); line-height: 1.5; }
+
+    input, select {
+      width: 100%;
+      padding: 12px;
+      margin-top: 7px;
+      border: 1px solid #d8deea;
+      border-radius: 9px;
+      background: white;
+    }
+
+    label {
+      display: block;
+      margin-top: 16px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .btn {
+      padding: 12px 15px;
+      border: 0;
+      border-radius: 9px;
+      font-weight: 600;
+    }
+
+    .primary { background: var(--blue); color: white; }
+    .secondary { background: #edf1fa; color: var(--dark); }
+    .outline { background: white; border: 1px solid var(--border); }
+
+    .full { width: 100%; margin-top: 12px; }
+
+    #message, #profileMessage {
+      font-size: 13px;
+      overflow-wrap: anywhere;
+      margin-top: 14px;
+    }
+
+    /* Main application */
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 235px minmax(0, 1fr);
+    }
+
+    .sidebar {
+      background: white;
+      border-right: 1px solid var(--border);
+      padding: 26px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .sidebar .brand { padding-left: 12px; }
+
+    .nav {
+      display: grid;
+      gap: 7px;
+    }
+
+    .nav button {
+      width: 100%;
+      text-align: left;
+      padding: 12px;
+      border: 0;
+      border-radius: 9px;
+      color: #536078;
+      background: transparent;
+    }
+
+    .nav button.active {
+      color: var(--blue);
+      background: #edf2ff;
+      font-weight: 700;
+    }
+
+    .sidebar-bottom {
+      margin-top: auto;
+      border-top: 1px solid var(--border);
+      padding-top: 18px;
+    }
+
+    .workspace { min-width: 0; }
+
+    .topbar {
+      min-height: 76px;
+      background: white;
+      border-bottom: 1px solid var(--border);
+      padding: 18px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .topbar p {
+      margin: 4px 0 0;
+      font-size: 13px;
+      color: var(--muted);
+      overflow-wrap: anywhere;
+    }
+
+    .content {
+      max-width: 1200px;
+      margin: auto;
+      padding: 30px;
+    }
+
+    .page-heading {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+
+    .page-heading h1 {
+      font-size: 27px;
+      margin-bottom: 8px;
+    }
+
+    .page-heading p {
+      color: var(--muted);
+      margin-bottom: 0;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+      margin-bottom: 25px;
+    }
+
+    .panel, .stat-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 22px;
+      min-width: 0;
+    }
+
+    .stat-label {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+
+    .stat-value {
+      font-size: clamp(21px, 2.5vw, 29px);
+      font-weight: 750;
+      overflow-wrap: anywhere;
+      margin-bottom: 8px;
+    }
+
+    .stat-note {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 0;
+    }
+
+    .section-title {
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+
+    .quick-actions {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .action-card {
+      text-align: left;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+      color: var(--dark);
+    }
+
+    .action-card strong {
+      display: block;
+      margin-bottom: 7px;
+    }
+
+    .action-card span {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .profile-form { max-width: 600px; }
+
+    .profile-form .btn { margin-top: 20px; }
+
+    .status {
+      margin-top: 15px;
+      font-size: 13px;
+      color: var(--muted);
+      overflow-wrap: anywhere;
+    }
+
+    .mobile-brand { display: none; }
+
+    @media (max-width: 850px) {
+      .app { grid-template-columns: 1fr; }
+
+      .sidebar {
+        padding: 14px;
+        border-right: 0;
+        border-bottom: 1px solid var(--border);
+        gap: 12px;
+      }
+
+      .sidebar .brand { display: none; }
+      .sidebar-bottom { display: none; }
+
+      .nav {
+        display: flex;
+        overflow-x: auto;
+        gap: 5px;
+      }
+
+      .nav button {
+        white-space: nowrap;
+        width: auto;
+      }
+
+      .mobile-brand { display: block; }
+
+      .content { padding: 22px 16px; }
+      .topbar { padding: 16px; }
+    }
+
+    @media (max-width: 600px) {
+      .cards { grid-template-columns: 1fr; gap: 12px; }
+      .quick-actions { grid-template-columns: 1fr; }
+      .stat-card, .panel { padding: 18px; }
+      .auth-card { padding: 24px; }
+      .topbar { align-items: flex-start; }
+      .topbar p { max-width: 220px; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- LOGIN AND SIGNUP -->
+  <section id="loginPanel" class="auth-page">
+    <div class="auth-card">
+      <div class="brand">Bizora</div>
+      <p class="muted">Your business. Better organized.</p>
+
+      <button class="btn outline full" id="googleBtn" type="button">
+        Continue with Google
+      </button>
+
+      <p class="muted" style="text-align:center;margin:20px 0 0;">
+        Or use your email
+      </p>
+
+      <form id="loginForm">
+        <label for="email">Email address</label>
+        <input id="email" type="email" required
+          placeholder="you@example.com">
+
+        <label for="password">Password</label>
+        <input id="password" type="password" minlength="6"
+          required placeholder="At least 6 characters">
+
+        <button class="btn primary full" type="submit">Log In</button>
+      </form>
+
+      <button class="btn secondary full" id="signupBtn" type="button">
+        Create an Account
+      </button>
+
+      <p id="message" role="status"></p>
+    </div>
+  </section>
+
+  <!-- BUSINESS APPLICATION -->
+  <div id="appPanel" class="app hidden">
+
+    <aside class="sidebar">
+      <div class="brand">Bizora</div>
+
+      <nav class="nav" aria-label="Main navigation">
+        <button type="button" class="active" data-view="overview">
+          ◫ &nbsp; Overview
+        </button>
+        <button type="button" data-view="profile">
+          ⚙ &nbsp; Business Profile
+        </button>
+        <button type="button" data-view="transactions">
+          ⇄ &nbsp; Transactions
+        </button>
+        <button type="button" data-view="inventory">
+          ▦ &nbsp; Inventory
+        </button>
+        <button type="button" data-view="customers">
+          ♙ &nbsp; Customers
+        </button>
+        <button type="button" data-view="reports">
+          ▤ &nbsp; Reports
+        </button>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <button class="btn secondary full" id="logoutBtn" type="button">
+          Log Out
+        </button>
+      </div>
+    </aside>
+
+    <div class="workspace">
+      <header class="topbar">
+        <div>
+          <strong class="mobile-brand" style="color:#2859d6;">Bizora</strong>
+          <div id="topBusinessName"><strong>My Business</strong></div>
+          <p id="userEmail"></p>
+        </div>
+
+        <button class="btn outline" id="topProfileBtn" type="button">
+          Business Profile
+        </button>
+      </header>
+
+      <main class="content">
+
+        <!-- OVERVIEW -->
+        <section id="view-overview" class="view">
+          <div class="page-heading">
+            <div>
+              <h1>Business Overview</h1>
+              <p>Here is your business at a glance.</p>
+            </div>
+            <button class="btn primary" id="editProfileBtn" type="button">
+              Edit Business Profile
+            </button>
+          </div>
+
+          <div class="cards">
+            <article class="stat-card">
+              <div class="stat-label">Total Income</div>
+              <div class="stat-value" id="incomeTotal">KES 0.00</div>
+              <p class="stat-note">Income records will appear here.</p>
+            </article>
+
+            <article class="stat-card">
+              <div class="stat-label">Total Expenses</div>
+              <div class="stat-value" id="expenseTotal">KES 0.00</div>
+              <p class="stat-note">Expense records will appear here.</p>
+            </article>
+
+            <article class="stat-card">
+              <div class="stat-label">Balance</div>
+              <div class="stat-value" id="balanceTotal">KES 0.00</div>
+              <p class="stat-note">Income minus expenses.</p>
+            </article>
+          </div>
+
+          <section class="panel">
+            <h2 class="section-title">Quick Actions</h2>
+            <p class="muted">
+              Your business tools will grow as we build each module.
+            </p>
+
+            <div class="quick-actions">
+              <button class="action-card" type="button"
+                data-view="transactions">
+                <strong>＋ Transactions</strong>
+                <span>Prepare to record income and expenses.</span>
+              </button>
+
+              <button class="action-card" type="button"
+                data-view="inventory">
+                <strong>▦ Inventory</strong>
+                <span>Manage products and stock in a future update.</span>
+              </button>
+
+              <button class="action-card" type="button"
+                data-view="reports">
+                <strong>▤ Reports</strong>
+                <span>Review business summaries in a future update.</span>
+              </button>
+            </div>
+          </section>
+
+          <p class="status" id="dashboardMessage" role="status"></p>
+        </section>
+
+        <!-- BUSINESS PROFILE -->
+        <section id="view-profile" class="view hidden">
+          <div class="page-heading">
+            <div>
+              <h1>Business Profile</h1>
+              <p>Update the information connected to your account.</p>
+            </div>
+          </div>
+
+          <section class="panel">
+            <form id="profileForm" class="profile-form">
+              <label for="businessName">Business name</label>
+              <input id="businessName" type="text"
+                placeholder="e.g. Mimah Fashion Store" required>
+
+              <label for="industry">Business industry</label>
+              <select id="industry" required>
+                <option value="">Choose an industry</option>
+                <option value="construction">Construction and projects</option>
+                <option value="retail">Shops and retail</option>
+                <option value="salon">Salons and beauty</option>
+                <option value="hospitality">Hotels and hospitality</option>
+                <option value="professional">Professional services</option>
+                <option value="other">Other</option>
+              </select>
+
+              <label for="currency">Business currency</label>
+              <select id="currency" required>
+                <option value="KES">KES — Kenyan Shilling</option>
+                <option value="USD">USD — US Dollar</option>
+                <option value="TZS">TZS — Tanzanian Shilling</option>
+                <option value="UGX">UGX — Ugandan Shilling</option>
+                <option value="RWF">RWF — Rwandan Franc</option>
+                <option value="ZAR">ZAR — South African Rand</option>
+                <option value="GBP">GBP — British Pound</option>
+                <option value="EUR">EUR — Euro</option>
+              </select>
+
+              <button class="btn primary" id="saveBtn" type="submit">
+                Save Business Profile
+              </button>
+
+              <button class="btn secondary" id="cancelProfileBtn"
+                type="button" style="margin-left:8px;">
+                Cancel
+              </button>
+            </form>
+
+            <p class="status" id="profileMessage" role="status"></p>
+          </section>
+        </section>
+
+      
+<section id="view-transactions" class="view hidden">
+  <div class="page-heading">
+    <div>
+      <h1>Transactions</h1>
+      <p>Track your business income and expenses.</p>
+    </div>
+  </div>
+
+  <section class="panel">
+    <h2 class="section-title">Add a Transaction</h2>
+
+    <form id="transactionForm" class="profile-form">
+      <label for="transactionType">Transaction type</label>
+      <select id="transactionType" required>
+        <option value="income">Income</option>
+        <option value="expense">Expense</option>
+      </select>
+
+      <label for="transactionAmount">Amount (KES)</label>
+      <input id="transactionAmount" type="number"
+        min="0.01" step="0.01" required placeholder="e.g. 1500">
+
+      <label for="transactionDate">Date</label>
+      <input id="transactionDate" type="date" required>
+
+      <label for="transactionCategory">Category</label>
+      <select id="transactionCategory" required>
+        <option value="">Choose a category</option>
+        <option value="Sales">Sales</option>
+        <option value="Services">Services</option>
+        <option value="Materials">Materials</option>
+        <option value="Stock">Stock purchases</option>
+        <option value="Transport">Transport</option>
+        <option value="Rent">Rent</option>
+        <option value="Salaries">Salaries</option>
+        <option value="Utilities">Utilities</option>
+        <option value="Other">Other</option>
+      </select>
+
+      <label for="transactionPayment">Payment method</label>
+      <select id="transactionPayment" required>
+        <option value="M-Pesa">M-Pesa</option>
+        <option value="Cash">Cash</option>
+        <option value="Bank">Bank transfer</option>
+        <option value="Card">Card</option>
+        <option value="Other">Other</option>
+      </select>
+
+      <label for="transactionDescription">Description</label>
+      <input id="transactionDescription" type="text"
+        placeholder="What was this transaction for?">
+
+      <button class="btn primary" id="transactionSaveBtn" type="submit">
+        Save Transaction
+      </button>
+    </form>
+
+    <p class="status" id="transactionMessage" role="status"></p>
+  </section>
+
+  <section class="panel" style="margin-top:20px;">
+    <h2 class="section-title">Transaction History</h2>
+
+    <label for="transactionSearch">Search transactions</label>
+    <input id="transactionSearch" type="search"
+      placeholder="Search by category or description">
+
+    <div id="transactionList" style="margin-top:18px;">
+      <p class="muted">Your saved transactions will appear here.</p>
+    </div>
+  </section>
+</section>
+
+
+      </main>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from
+      "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  onAuthStateChanged,
+  signOut
+} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+
+  
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc,
+  serverTimestamp,
+  collection,
+  addDoc,
+  onSnapshot,
+  query,
+  orderBy,
+  updateDoc,
+  deleteDoc
+} from
+  "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCgVfPDwrdICBQIoyvvO_eJQqKcLRWZJbU",
+      authDomain: "bizora-5cb9a.firebaseapp.com",
+      projectId: "bizora-5cb9a",
+      storageBucket: "bizora-5cb9a.firebasestorage.app",
+      messagingSenderId: "618099051671",
+      appId: "1:618099051671:web:9ddf2a783824456d202dd2",
+      measurementId: "G-GB30LFCXFC"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const $ = id => document.getElementById(id);
+
+    let currentProfile = null;
+    let currentView = "overview";
+
+let transactions = [];
+let unsubscribeTransactions = null;
+let editingTransactionId = null;
+
+    function showMessage(id, text) {
+      $(id).textContent = text;
+    }
+
+    function showView(view) {
+      const profile = currentProfile;
+
+      if (!profile && view !== "profile") {
+        view = "profile";
+      }
+
+      currentView = view;
+
+      document.querySelectorAll(".view").forEach(section => {
+        section.classList.toggle(
+          "hidden",
+          section.id !== "view-" + view
+        );
+      });
+
+      document.querySelectorAll("[data-view]").forEach(button => {
+        button.classList.toggle(
+          "active",
+          button.dataset.view === view
+        );
+      });
+    }
+
+   
+function updateDashboard(profile) {
+  const currency = profile?.currency || "KES";
+  const name = profile?.businessName || "My Business";
+
+  const income = transactions
+    .filter(t => t.type === "income")
+    .reduce((total, t) => total + Number(t.amount || 0), 0);
+
+  const expenses = transactions
+    .filter(t => t.type === "expense")
+    .reduce((total, t) => total + Number(t.amount || 0), 0);
+
+  const balance = income - expenses;
+
+  const formatMoney = amount =>
+    currency + " " + amount.toLocaleString("en-KE", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+
+  $("topBusinessName").textContent = name;
+  $("incomeTotal").textContent = formatMoney(income);
+  $("expenseTotal").textContent = formatMoney(expenses);
+  $("balanceTotal").textContent = formatMoney(balance);
+}
+
+    
+
+function getTransactionsCollection() {
+  const user = auth.currentUser;
+
+  if (!user) {
+    throw new Error("Please log in again.");
+  }
+
+  return collection(db, "users", user.uid, "transactions");
+}
+
+function setTransactionDateToday() {
+  const today = new Date();
+
+  $("transactionDate").value =
+    today.getFullYear() + "-" +
+    String(today.getMonth() + 1).padStart(2, "0") + "-" +
+    String(today.getDate()).padStart(2, "0");
+}
+
+
+
+$("transactionForm").addEventListener("submit", async event => {
+  event.preventDefault();
+
+  if (!auth.currentUser) {
+    showMessage("transactionMessage", "Please log in again.");
+    return;
+  }
+
+  const amount = Number($("transactionAmount").value);
+
+  if (!Number.isFinite(amount) || amount <= 0) {
+    showMessage("transactionMessage", "Enter an amount greater than zero.");
+    return;
+  }
+
+  const saveButton = $("transactionSaveBtn");
+  saveButton.disabled = true;
+  saveButton.textContent = "Saving...";
+
+  try {
+    const transaction = {
+      type: $("transactionType").value,
+      amount,
+      date: $("transactionDate").value,
+      category: $("transactionCategory").value,
+      paymentMethod: $("transactionPayment").value,
+      description: $("transactionDescription").value.trim(),
+      createdAt: serverTimestamp()
+    };
+
+    await addDoc(getTransactionsCollection(), transaction);
+
+    $("transactionForm").reset();
+
+    const today = new Date();
+    $("transactionDate").value =
+      today.getFullYear() + "-" +
+      String(today.getMonth() + 1).padStart(2, "0") + "-" +
+      String(today.getDate()).padStart(2, "0");
+
+    showMessage("transactionMessage", "Transaction saved successfully!");
+  } catch (error) {
+    console.error("Transaction error:", error);
+    showMessage("transactionMessage", "Could not save: " + error.message);
+  } finally {
+    saveButton.disabled = false;
+    saveButton.textContent = "Save Transaction";
+  }
+});
+
+function renderTransactions() {
+  const list = $("transactionList");
+  const search = $("transactionSearch").value.toLowerCase().trim();
+
+  const filtered = transactions.filter(transaction => {
+    const text = [
+      transaction.category,
+      transaction.description,
+      transaction.paymentMethod,
+      transaction.type,
+      transaction.date
+    ].join(" ").toLowerCase();
+
+    return text.includes(search);
+  });
+
+  if (filtered.length === 0) {
+    list.innerHTML = '<p class="muted">No transactions found.</p>';
+    return;
+  }
+
+  list.innerHTML = filtered.map(transaction => {
+    const amount = Number(transaction.amount || 0).toLocaleString(
+      "en-KE",
+      { minimumFractionDigits: 2, maximumFractionDigits: 2 }
+    );
+
+    const safeId = transaction.id;
+    const typeLabel = transaction.type === "income" ? "Income" : "Expense";
+    const sign = transaction.type === "income" ? "+" : "−";
+
+    return `
+      <article class="panel" style="margin-bottom:12px;">
+        <strong>${typeLabel}: ${sign} ${amount}</strong>
+        <p class="muted" style="margin:8px 0;">
+          ${escapeTransactionText(transaction.category)} ·
+          ${escapeTransactionText(transaction.date)}
+        </p>
+        <p>${escapeTransactionText(transaction.description || "No description")}</p>
+        <p class="muted">${escapeTransactionText(transaction.paymentMethod)}</p>
+        <button class="btn secondary" type="button"
+          data-delete-transaction="${safeId}">Delete</button>
+      </article>
+    `;
+  }).join("");
+}
+
+function escapeTransactionText(value) {
+  return String(value ?? "").replace(/[&<>"']/g, character => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  })[character]);
+}
+
+$("transactionSearch").addEventListener("input", renderTransactions);
+
+$("transactionList").addEventListener("click", async event => {
+  const button = event.target.closest("[data-delete-transaction]");
+  if (!button) return;
+
+  const id = button.dataset.deleteTransaction;
+
+  if (!confirm("Are you sure you want to delete this transaction?")) {
+    return;
+  }
+
+  button.disabled = true;
+
+  try {
+    await deleteDoc(doc(
+      db, "users", auth.currentUser.uid, "transactions", id
+    ));
+    showMessage("transactionMessage", "Transaction deleted.");
+  } catch (error) {
+    console.error(error);
+    showMessage("transactionMessage", "Could not delete: " + error.message);
+    button.disabled = false;
+  }
+});
+     
+
+
+function listenToTransactions() {
+  if (unsubscribeTransactions) {
+    unsubscribeTransactions();
+    unsubscribeTransactions = null;
+  }
+
+  const user = auth.currentUser;
+
+  if (!user) {
+    transactions = [];
+    renderTransactions();
+    updateDashboard(currentProfile || {});
+    return;
+  }
+
+  const transactionsQuery = query(
+    getTransactionsCollection(),
+    orderBy("date", "desc")
+  );
+
+  unsubscribeTransactions = onSnapshot(
+    transactionsQuery,
+    snapshot => {
+      transactions = snapshot.docs.map(document => ({
+        id: document.id,
+        ...document.data()
+      }));
+
+      renderTransactions();
+      updateDashboard(currentProfile || {});
+    },
+    error => {
+      console.error("Transaction loading error:", error);
+      showMessage(
+        "transactionMessage",
+        "Could not load transactions: " + error.message
+      );
+    }
+  );
+}
+
+
+
+
+    function fillProfile(profile = {}) {
+      $("businessName").value = profile.businessName || "";
+      $("industry").value = profile.industry || "";
+      $("currency").value = profile.currency || "KES";
+    }
+
+    async function loadProfile(user) {
+      showMessage("dashboardMessage", "Loading your business...");
+      showMessage("profileMessage", "");
+
+      try {
+        const profileRef = doc(db, "users", user.uid);
+        const snapshot = await getDoc(profileRef);
+
+        if (snapshot.exists()) {
+          currentProfile = snapshot.data();
+          fillProfile(currentProfile);
+          updateDashboard(currentProfile);
+          showView("overview");
+          showMessage("dashboardMessage", "");
+        } else {
+          currentProfile = null;
+          fillProfile();
+          showView("profile");
+          showMessage(
+            "profileMessage",
+            "Welcome! Complete your business profile to get started."
+          );
+        }
+      } catch (error) {
+        console.error(error);
+        showMessage(
+          "dashboardMessage",
+          "Could not load your profile. Please refresh and try again."
+        );
+        showView("profile");
+        showMessage("profileMessage", error.message);
+      }
+    }
+
+    $("googleBtn").addEventListener("click", async () => {
+      showMessage("message", "");
+      try {
+        await signInWithPopup(auth, new GoogleAuthProvider());
+      } catch (error) {
+        showMessage("message", error.message);
+      }
+    });
+
+    $("loginForm").addEventListener("submit", async event => {
+      event.preventDefault();
+      showMessage("message", "");
+
+      try {
+        await signInWithEmailAndPassword(
+          auth,
+          $("email").value.trim(),
+          $("password").value
+        );
+      } catch (error) {
+        showMessage("message", error.message);
+      }
+    });
+
+    $("signupBtn").addEventListener("click", async () => {
+      const email = $("email").value.trim();
+      const password = $("password").value;
+
+      if (!email || password.length < 6) {
+        showMessage(
+          "message",
+          "Enter an email and a password of at least 6 characters."
+        );
+        return;
+      }
+
+      try {
+        showMessage("message", "");
+        await createUserWithEmailAndPassword(auth, email, password);
+      } catch (error) {
+        showMessage("message", error.message);
+      }
+    });
+
+    $("profileForm").addEventListener("submit", async event => {
+      event.preventDefault();
+
+      const user = auth.currentUser;
+      if (!user) {
+        showMessage("profileMessage", "Please log in again.");
+        return;
+      }
+
+      const businessName = $("businessName").value.trim();
+      const industry = $("industry").value;
+      const currency = $("currency").value;
+
+      if (!businessName || !industry || !currency) {
+        showMessage("profileMessage", "Complete all fields first.");
+        return;
+      }
+
+      const saveBtn = $("saveBtn");
+      saveBtn.disabled = true;
+      saveBtn.textContent = "Saving...";
+      showMessage("profileMessage", "");
+
+      try {
+        const profileRef = doc(db, "users", user.uid);
+
+        await setDoc(profileRef, {
+          uid: user.uid,
+          email: user.email || "",
+          businessName,
+          industry,
+          currency,
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+
+        currentProfile = {
+          ...currentProfile,
+          uid: user.uid,
+          email: user.email || "",
+          businessName,
+          industry,
+          currency
+        };
+
+        updateDashboard(currentProfile);
+        showMessage("profileMessage", "Profile saved successfully!");
+        showView("overview");
+      } catch (error) {
+        console.error(error);
+        showMessage(
+          "profileMessage",
+          "Could not save your profile: " + error.message
+        );
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = "Save Business Profile";
+      }
+    });
+
+    document.querySelectorAll("[data-view]").forEach(button => {
+      button.addEventListener("click", () => {
+        const view = button.dataset.view;
+
+        if (view === "profile") {
+          fillProfile(currentProfile || {});
+          showMessage("profileMessage", "");
+        }
+
+        showView(view);
+      });
+    });
+
+    $("editProfileBtn").addEventListener("click", () => {
+      fillProfile(currentProfile || {});
+      showMessage("profileMessage", "");
+      showView("profile");
+    });
+
+    $("topProfileBtn").addEventListener("click", () => {
+      fillProfile(currentProfile || {});
+      showMessage("profileMessage", "");
+      showView("profile");
+    });
+
+    $("cancelProfileBtn").addEventListener("click", () => {
+      if (currentProfile) {
+        fillProfile(currentProfile);
+        showView("overview");
+      } else {
+        showMessage(
+          "profileMessage",
+          "Please complete your business profile first."
+        );
+      }
+    });
+
+    $("logoutBtn").addEventListener("click", async () => {
+      try {
+        await signOut(auth);
+      } catch (error) {
+        showMessage("dashboardMessage", error.message);
+      }
+    });
+
+    onAuthStateChanged(auth, async user => {
+      $("loginPanel").classList.toggle("hidden", !!user);
+      $("appPanel").classList.toggle("hidden", !user);
+
+      if (user) {
+        $("userEmail").textContent =
+          user.email || user.displayName || "Signed in";
+       
+
+await loadProfile(user);
+setTransactionDateToday();
+listenToTransactions();
+} else {
+
+
+        currentProfile = null;
+        fillProfile();
+        showMessage("message", "");
+      }
+    });
+  </script>
+</body>
+</html>
+
+
