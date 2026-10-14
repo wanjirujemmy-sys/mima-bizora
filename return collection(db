@@ -900,40 +900,6 @@ function listenToTransactions() {
 
 
 
-  const user = auth.currentUser;
-
-  if (!user) {
-    transactions = [];
-    renderTransactions();
-    updateDashboard(currentProfile || {});
-    return;
-  }
-
-  const transactionsQuery = query(
-    getTransactionsCollection(),
-    orderBy("date", "desc")
-  );
-
-  unsubscribeTransactions = onSnapshot(
-    transactionsQuery,
-    snapshot => {
-      transactions = snapshot.docs.map(document => ({
-        id: document.id,
-        ...document.data()
-      }));
-
-      renderTransactions();
-      updateDashboard(currentProfile || {});
-    },
-    error => {
-      console.error("Transaction loading error:", error);
-      showMessage(
-        "transactionMessage",
-        "Could not load transactions: " + error.message
-      );
-    }
-  );
-}
 
     function fillProfile(profile = {}) {
       $("businessName").value = profile.businessName || "";
