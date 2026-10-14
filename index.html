@@ -652,10 +652,11 @@ import {
   collection,
   addDoc,
   onSnapshot,
-  query,
+ query,
   orderBy,
   updateDoc,
-  deleteDoc
+  deleteDoc,
+  getDocs
 } from
   "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
 
@@ -811,7 +812,64 @@ $("transactionForm").addEventListener("submit", async event => {
   }
 });
 
-function renderTransactions() {
+async function downloadBizoraBackup() {
+  const user = auth.currentUser;
+
+  if (!user) {
+    showMessage("backupMessage", "Please sign in first.");
+    return;
+  }
+
+  const button = $("downloadBackupBtn");
+  if (button) button.disabled = true;
+
+  try {
+    const profileRef = doc(db, "users", user.uid);
+    const profileSnap = await getDoc(profileRef);
+
+    const transactionsRef = collection(
+      db, "users", user.uid, "transactions"
+    );
+    const transactionsSnap = await getDocs(transactionsRef);
+
+    const backup = {
+      app: "Bizora",
+      backupDate: new Date().toISOString(),
+      uid: user.uid,
+      profile: profileSnap.exists() ? profileSnap.data() : null,
+      transactions: transactionsSnap.docs.map(item => ({
+        id: item.id,
+        ...item.data()
+      }))
+    };
+
+    const blob = new Blob(
+      [JSON.stringify(backup, null, 2)],
+      { type: "application/json" }
+    );
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "bizora-backup-" +
+      new Date().toISOString().slice(0, 10) + ".json";
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+
+    showMessage("backupMessage", "Backup downloaded successfully.");
+  } catch (error) {
+    console.error("Backup failed:", error);
+    showMessage("backupMessage", "Backup failed: " + error.message);
+  } finally {
+    if (button) button.disabled = false;
+  }
+}
+
+
+    function renderTransactions() {
   const list = $("transactionList");
   const search = $("transactionSearch").value.toLowerCase().trim();
 
@@ -925,7 +983,11 @@ const exportCsvButton = $("exportCsvBtn");
 if (exportCsvButton) {
   exportCsvButton.addEventListener("click", exportTransactionsCSV);
 }
+const downloadBackupButton = $("downloadBackupBtn");
 
+if (downloadBackupButton) {
+  downloadBackupButton.addEventListener("click", downloadBizoraBackup);
+}
 
 const transactionList = $("transactionList");
 
