@@ -554,15 +554,20 @@
 
   <p id="restorePreview" class="status" role="status"></p>
 
+ 
+  </button>
+
   <button
-    class="btn secondary"
-    id="previewRestoreBtn"
+    class="btn primary"
+    id="restoreBackupBtn"
     type="button"
+    disabled
   >
-    Preview Backup
+    Restore Backup
   </button>
 
   <p class="status" id="restoreMessage" role="status"></p>
+
 </section>
 </section>
 
@@ -674,6 +679,7 @@ import {
   
 import {
   getFirestore,
+  Timestamp,
   doc,
   getDoc,
   setDoc,
@@ -896,16 +902,21 @@ async function downloadBizoraBackup() {
     if (button) button.disabled = false;
   }
 }
-      
+ let previewedBizoraBackup = null;     
+
 
 async function previewBizoraBackup() {
   const fileInput = $("restoreBackupFile");
   const preview = $("restorePreview");
   const message = $("restoreMessage");
+  const restoreButton = $("restoreBackupBtn");
   const file = fileInput.files[0];
 
   preview.textContent = "";
   message.textContent = "";
+  previewedBizoraBackup = null;
+
+  if (restoreButton) restoreButton.disabled = true;
 
   if (!file) {
     message.textContent = "Please choose a backup JSON file first.";
@@ -926,17 +937,157 @@ async function previewBizoraBackup() {
       throw new Error("This does not look like a valid Bizora backup.");
     }
 
+    const user = auth.currentUser;
+
+    if (!user) {
+      throw new Error("Please sign in before restoring a backup.");
+    }
+
+    if (backup.uid !== user.uid) {
+      throw new Error(
+        "This backup belongs to a different account. Restore cancelled."
+      );
+    }
+
+    if (
+      backup.transactions.some(item =>
+        !item ||
+        typeof item.id !== "string" ||
+        !item.id.trim() ||
+        typeof item !== "object"
+      )
+    ) {
+      throw new Error("The backup contains an invalid transaction.");
+    }
+
+    previewedBizoraBackup = backup;
+
     preview.textContent =
       "Business: " + (backup.profile.businessName || "Unnamed") +
       " | Transactions: " + backup.transactions.length +
       " | Currency: " + (backup.profile.currency || "Not specified");
 
     message.textContent =
-      "Backup file looks valid. No data has been changed.";
+      "Backup verified for your account. No data has been changed.";
+
+    if (restoreButton) restoreButton.disabled = false;
+
   } catch (error) {
-    message.textContent = "Could not read backup: " + error.message;
+    previewedBizoraBackup = null;
+    message.textContent = "Could not verify backup: " + error.message;
+  }
+  
+}
+
+function convertBackupTimestamps(value) {
+  if (Array.isArray(value)) {
+    return value.map(convertBackupTimestamps);
+  }
+
+  if (value && typeof value === "object") {
+    if (
+      value.type === "firestore/timestamp/1.0" &&
+      Number.isFinite(value.seconds) &&
+      Number.isFinite(value.nanoseconds)
+    ) {
+      return new Timestamp(value.seconds, value.nanoseconds);
+    }
+
+    const converted = {};
+
+    for (const [key, item] of Object.entries(value)) {
+      converted[key] = convertBackupTimestamps(item);
+    }
+
+    return converted;
+  }
+
+  return value;
+}
+
+async function restoreBizoraBackup() {
+  const user = auth.currentUser;
+  const button = $("restoreBackupBtn");
+  const message = $("restoreMessage");
+  const backup = previewedBizoraBackup;
+
+  if (!user || !backup || backup.uid !== user.uid) {
+    message.textContent =
+      "Please sign in and preview a valid backup for your account.";
+    return;
+  }
+
+  if (!confirm(
+    "Restore this backup?\n\n" +
+    "Existing transactions will be kept. Missing transactions " +
+    "will be added, and your business profile will be updated."
+  )) {
+    return;
+  }
+
+  if (button) button.disabled = true;
+
+  try {
+    const profileRef = doc(db, "users", user.uid);
+    const transactionsRef = collection(
+      db, "users", user.uid, "transactions"
+    );
+
+    const existingSnapshot = await getDocs(transactionsRef);
+    const existingIds = new Set(
+      existingSnapshot.docs.map(item => item.id)
+    );
+
+    let added = 0;
+    let skipped = 0;
+
+    for (const item of backup.transactions) {
+      if (existingIds.has(item.id)) {
+        skipped++;
+        continue;
+      }
+
+      const transactionData = { ...item };
+      delete transactionData.id;
+
+      await setDoc(
+        doc(db, "users", user.uid, "transactions", item.id),
+        convertBackupTimestamps(transactionData)
+      );
+
+      existingIds.add(item.id);
+      added++;
+    }
+
+    const profileData = { ...backup.profile };
+    delete profileData.uid;
+
+    await setDoc(
+      profileRef,
+      convertBackupTimestamps(profileData),
+      { merge: true }
+    );
+
+    previewedBizoraBackup = null;
+    $("restorePreview").textContent = "";
+
+    message.textContent =
+      "Restore completed. Added " + added +
+      " transactions; skipped " + skipped +
+      " existing transactions. Profile updated.";
+
+  } catch (error) {
+    console.error("Bizora restore failed:", error);
+    message.textContent =
+      "Restore stopped: " + error.message +
+      ". Some transactions may already have been added. " +
+      "Preview the backup again before retrying.";
+  } finally {
+    if (button) button.disabled = false;
   }
 }
+
+    
 
     function renderTransactions() {
   const list = $("transactionList");
@@ -1057,11 +1208,30 @@ const downloadBackupButton = $("downloadBackupBtn");
 if (downloadBackupButton) {
   downloadBackupButton.addEventListener("click", downloadBizoraBackup);
 }
-const previewRestoreButton = $("previewRestoreBtn");
+const restoreBackupButton = $("restoreBackupBtn");
 
-if (previewRestoreButton) {
-  previewRestoreButton.addEventListener("click", previewBizoraBackup);
+if (restoreBackupButton) {
+  restoreBackupButton.addEventListener(
+    "click",
+    restoreBizoraBackup
+  );
 }
+    
+const restoreFileInput = $("restoreBackupFile");
+
+if (restoreFileInput) {
+  restoreFileInput.addEventListener("change", () => {
+    previewedBizoraBackup = null;
+
+    const restoreButton = $("restoreBackupBtn");
+    if (restoreButton) restoreButton.disabled = true;
+
+    $("restorePreview").textContent = "";
+    $("restoreMessage").textContent =
+      "Preview the selected backup before restoring.";
+  });
+}
+
 const transactionList = $("transactionList");
 
 if (transactionList) {
