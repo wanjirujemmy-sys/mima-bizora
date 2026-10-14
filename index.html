@@ -534,9 +534,38 @@
               Download Backup
             </button>
 
-            <p class="status" id="backupMessage" role="status"></p>
-          </section>
-        </section>
+        
+<p class="status" id="backupMessage" role="status"></p>
+</section>
+
+<section class="panel">
+  <h2 class="section-title">Restore Backup</h2>
+  <p>
+    Restore your business profile and transactions from a
+    previously downloaded Bizora JSON backup.
+  </p>
+
+  <label for="restoreBackupFile">Choose backup file</label>
+  <input
+    id="restoreBackupFile"
+    type="file"
+    accept=".json,application/json"
+  >
+
+  <p id="restorePreview" class="status" role="status"></p>
+
+  <button
+    class="btn secondary"
+    id="previewRestoreBtn"
+    type="button"
+  >
+    Preview Backup
+  </button>
+
+  <p class="status" id="restoreMessage" role="status"></p>
+</section>
+</section>
+
 
 
       
@@ -867,7 +896,47 @@ async function downloadBizoraBackup() {
     if (button) button.disabled = false;
   }
 }
+      
 
+async function previewBizoraBackup() {
+  const fileInput = $("restoreBackupFile");
+  const preview = $("restorePreview");
+  const message = $("restoreMessage");
+  const file = fileInput.files[0];
+
+  preview.textContent = "";
+  message.textContent = "";
+
+  if (!file) {
+    message.textContent = "Please choose a backup JSON file first.";
+    return;
+  }
+
+  try {
+    const text = await file.text();
+    const backup = JSON.parse(text);
+
+    if (
+      backup.app !== "Bizora" ||
+      !backup.profile ||
+      !Array.isArray(backup.transactions) ||
+      !backup.uid ||
+      backup.profile.uid !== backup.uid
+    ) {
+      throw new Error("This does not look like a valid Bizora backup.");
+    }
+
+    preview.textContent =
+      "Business: " + (backup.profile.businessName || "Unnamed") +
+      " | Transactions: " + backup.transactions.length +
+      " | Currency: " + (backup.profile.currency || "Not specified");
+
+    message.textContent =
+      "Backup file looks valid. No data has been changed.";
+  } catch (error) {
+    message.textContent = "Could not read backup: " + error.message;
+  }
+}
 
     function renderTransactions() {
   const list = $("transactionList");
@@ -988,7 +1057,11 @@ const downloadBackupButton = $("downloadBackupBtn");
 if (downloadBackupButton) {
   downloadBackupButton.addEventListener("click", downloadBizoraBackup);
 }
+const previewRestoreButton = $("previewRestoreBtn");
 
+if (previewRestoreButton) {
+  previewRestoreButton.addEventListener("click", previewBizoraBackup);
+}
 const transactionList = $("transactionList");
 
 if (transactionList) {
