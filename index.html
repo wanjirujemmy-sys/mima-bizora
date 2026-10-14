@@ -672,24 +672,34 @@ let editingTransactionId = null;
       });
     }
 
-    function updateDashboard(profile) {
-      const currency = profile.currency || "KES";
-      const name = profile.businessName || "My Business";
+   
+function updateDashboard(profile) {
+  const currency = profile?.currency || "KES";
+  const name = profile?.businessName || "My Business";
 
-      $("topBusinessName").textContent = name;
-      $("incomeTotal").textContent =
-        currency + " " + (0).toLocaleString("en-KE", {
-          minimumFractionDigits: 2
-        });
-      $("expenseTotal").textContent =
-        currency + " " + (0).toLocaleString("en-KE", {
-          minimumFractionDigits: 2
-        });
-      $("balanceTotal").textContent =
-        currency + " " + (0).toLocaleString("en-KE", {
-          minimumFractionDigits: 2
-        });
-    }
+  const income = transactions
+    .filter(t => t.type === "income")
+    .reduce((total, t) => total + Number(t.amount || 0), 0);
+
+  const expenses = transactions
+    .filter(t => t.type === "expense")
+    .reduce((total, t) => total + Number(t.amount || 0), 0);
+
+  const balance = income - expenses;
+
+  const formatMoney = amount =>
+    currency + " " + amount.toLocaleString("en-KE", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+
+  $("topBusinessName").textContent = name;
+  $("incomeTotal").textContent = formatMoney(income);
+  $("expenseTotal").textContent = formatMoney(expenses);
+  $("balanceTotal").textContent = formatMoney(balance);
+}
+
+    
 
 function getTransactionsCollection() {
   const user = auth.currentUser;
@@ -844,8 +854,9 @@ $("transactionList").addEventListener("click", async event => {
     button.disabled = false;
   }
 });
+     
 
- 
+
 function listenToTransactions() {
   if (unsubscribeTransactions) {
     unsubscribeTransactions();
@@ -857,6 +868,7 @@ function listenToTransactions() {
   if (!user) {
     transactions = [];
     renderTransactions();
+    updateDashboard(currentProfile || {});
     return;
   }
 
@@ -874,6 +886,7 @@ function listenToTransactions() {
       }));
 
       renderTransactions();
+      updateDashboard(currentProfile || {});
     },
     error => {
       console.error("Transaction loading error:", error);
@@ -884,9 +897,44 @@ function listenToTransactions() {
     }
   );
 }
-  
 
- 
+
+
+  const user = auth.currentUser;
+
+  if (!user) {
+    transactions = [];
+    renderTransactions();
+    updateDashboard(currentProfile || {});
+    return;
+  }
+
+  const transactionsQuery = query(
+    getTransactionsCollection(),
+    orderBy("date", "desc")
+  );
+
+  unsubscribeTransactions = onSnapshot(
+    transactionsQuery,
+    snapshot => {
+      transactions = snapshot.docs.map(document => ({
+        id: document.id,
+        ...document.data()
+      }));
+
+      renderTransactions();
+      updateDashboard(currentProfile || {});
+    },
+    error => {
+      console.error("Transaction loading error:", error);
+      showMessage(
+        "transactionMessage",
+        "Could not load transactions: " + error.message
+      );
+    }
+  );
+}
+
     function fillProfile(profile = {}) {
       $("businessName").value = profile.businessName || "";
       $("industry").value = profile.industry || "";
