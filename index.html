@@ -691,7 +691,117 @@
         unsubscribeTransactions = null;
       }
     }
+    /* ---------- Retail inventory ---------- */
 
+    function formatInventoryMoney(amount) {
+      return currentCurrency() + " " + Number(amount || 0).toLocaleString(
+        undefined,
+        { minimumFractionDigits: 2, maximumFractionDigits: 2 }
+      );
+    }
+
+    function escapeInventoryText(value) {
+      return String(value ?? "").replace(/[&<>"']/g, character => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      })[character]);
+    }
+
+    function renderInventory() {
+      const search = ($("productSearch")?.value || "").trim().toLowerCase();
+
+      const lowStockProducts = products.filter(product =>
+        Number(product.quantity || 0) <= Number(product.lowStockThreshold || 0)
+      );
+
+      const stockValue = products.reduce((total, product) =>
+        total + Number(product.quantity || 0) * Number(product.costPrice || 0), 0
+      );
+
+      $("inventoryProductCount").textContent = products.length;
+      $("inventoryLowStockCount").textContent = lowStockProducts.length;
+      $("inventoryStockValue").textContent = formatInventoryMoney(stockValue);
+
+      const list = $("inventoryProductList");
+      if (!list) return;
+
+      const filteredProducts = products.filter(product =>
+        [product.name, product.sku, product.category]
+          .some(value => String(value || "").toLowerCase().includes(search))
+      );
+
+      if (filteredProducts.length === 0) {
+        list.innerHTML = products.length
+          ? '<p class="muted">No products match your search.</p>'
+          : '<p class="muted">No products yet. Add your first product above.</p>';
+        return;
+      }
+
+      list.innerHTML = filteredProducts.map(product => {
+        const quantity = Number(product.quantity || 0);
+        const threshold = Number(product.lowStockThreshold || 0);
+        const isLow = quantity <= threshold;
+
+        return `
+          <article class="panel" style="margin-bottom:12px;">
+            <h3>${escapeInventoryText(product.name)}</h3>
+            <p class="muted">
+              Code: ${escapeInventoryText(product.sku || "—")}
+              | Category: ${escapeInventoryText(product.category)}
+            </p>
+            <p>Quantity in stock: <strong>${quantity}</strong></p>
+            <p>Cost per item: ${formatInventoryMoney(product.costPrice)}</p>
+            <p>Selling price: ${formatInventoryMoney(product.sellingPrice)}</p>
+            <p>Stock value: <strong>${formatInventoryMoney(quantity * Number(product.costPrice || 0))}</strong></p>
+            <p>${isLow
+              ? '<strong style="color:#b45309;">Low stock — reorder soon</strong>'
+              : '<span>Stock level OK</span>'}</p>
+            <button type="button" class="btn"
+              data-adjust-stock="${escapeInventoryText(product.id)}">
+              Adjust stock
+            </button>
+          </article>
+        `;
+      }).join("");
+    }
+
+    function stopListeningToProducts() {
+      if (unsubscribeProducts) {
+        unsubscribeProducts();
+        unsubscribeProducts = null;
+      }
+    }
+
+    function listenToProducts() {
+      stopListeningToProducts();
+
+      const user = auth.currentUser;
+      if (!user) {
+        products = [];
+        renderInventory();
+        return;
+      }
+
+      const productsCollection = collection(db, "users", user.uid, "products");
+
+      unsubscribeProducts = onSnapshot(
+        productsCollection,
+        snapshot => {
+          products = snapshot.docs.map(item => ({
+            id: item.id,
+            ...item.data()
+          }));
+          renderInventory();
+        },
+        error => {
+          console.error("Inventory loading error:", error);
+          showMessage("inventoryMessage", "Could not load products: " + error.message);
+        }
+      );
+    }
     function listenToTransactions() {
       stopListeningToTransactions();
 
