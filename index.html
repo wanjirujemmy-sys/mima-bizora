@@ -125,6 +125,7 @@
       </form>
 
       <button class="btn secondary full" id="signupBtn" type="button">Create an Account</button>
+      <button class="btn outline full" id="forgotBtn" type="button">Forgot password?</button>
 
       <p id="message" role="status"></p>
     </div>
@@ -372,87 +373,74 @@
           </section>
         </section>
 
-       ```html
-<section id="view-inventory" class="view hidden">
-  <div class="page-heading">
-    <div>
-      <h1>Retail Inventory</h1>
-      <p>Add products, monitor stock and track inventory value.</p>
-    </div>
-  </div>
+        <!-- COMING SOON PAGES -->
+        <section id="view-inventory" class="view hidden">
+          <div class="page-heading">
+            <div>
+              <h1>Retail Inventory</h1>
+              <p>Add products, monitor stock and track inventory value.</p>
+            </div>
+          </div>
 
-  <div class="cards">
-    <article class="stat-card">
-      <div class="stat-label">Products</div>
-      <div class="stat-value" id="inventoryProductCount">0</div>
-      <p class="stat-note">Products recorded</p>
-    </article>
+          <div class="cards">
+            <article class="stat-card">
+              <div class="stat-label">Products</div>
+              <div class="stat-value" id="inventoryProductCount">0</div>
+              <p class="stat-note">Products recorded</p>
+            </article>
+            <article class="stat-card">
+              <div class="stat-label">Low-stock products</div>
+              <div class="stat-value" id="inventoryLowStockCount">0</div>
+              <p class="stat-note">At or below the stock warning level</p>
+            </article>
+            <article class="stat-card">
+              <div class="stat-label">Stock value</div>
+              <div class="stat-value" id="inventoryStockValue">KES 0.00</div>
+              <p class="stat-note">Quantity multiplied by unit cost</p>
+            </article>
+          </div>
 
-    <article class="stat-card">
-      <div class="stat-label">Low-stock products</div>
-      <div class="stat-value" id="inventoryLowStockCount">0</div>
-      <p class="stat-note">At or below the stock warning level</p>
-    </article>
+          <section class="panel">
+            <h2 class="section-title">Add a Product</h2>
 
-    <article class="stat-card">
-      <div class="stat-label">Stock value</div>
-      <div class="stat-value" id="inventoryStockValue">KES 0.00</div>
-      <p class="stat-note">Quantity multiplied by unit cost</p>
-    </article>
-  </div>
+            <form id="productForm" class="profile-form">
+              <label for="productName">Product name</label>
+              <input id="productName" required maxlength="100" placeholder="e.g. Men's black polo">
 
-  <section class="panel">
-    <h2 class="section-title">Add a Product</h2>
+              <label for="productSku">Product code (optional)</label>
+              <input id="productSku" maxlength="60" placeholder="e.g. POL-BLK-001">
 
-    <form id="productForm" class="profile-form">
-      <label for="productName">Product name</label>
-      <input id="productName" required maxlength="100"
-        placeholder="e.g. Men's black polo">
+              <label for="productCategory">Category</label>
+              <input id="productCategory" required maxlength="60" placeholder="e.g. Polos">
 
-      <label for="productSku">Product code (optional)</label>
-      <input id="productSku" maxlength="60"
-        placeholder="e.g. POL-BLK-001">
+              <label for="productQuantity">Opening stock quantity</label>
+              <input id="productQuantity" type="number" min="0" step="1" required value="0">
 
-      <label for="productCategory">Category</label>
-      <input id="productCategory" required maxlength="60"
-        placeholder="e.g. Polos">
+              <label for="productCost">Cost per item</label>
+              <input id="productCost" type="number" min="0" step="0.01" required placeholder="e.g. 350">
 
-      <label for="productQuantity">Opening stock quantity</label>
-      <input id="productQuantity" type="number" min="0"
-        step="1" required value="0">
+              <label for="productPrice">Selling price per item</label>
+              <input id="productPrice" type="number" min="0" step="0.01" required placeholder="e.g. 500">
 
-      <label for="productCost">Cost per item</label>
-      <input id="productCost" type="number" min="0"
-        step="0.01" required placeholder="e.g. 350">
+              <label for="productLowStock">Low-stock warning level</label>
+              <input id="productLowStock" type="number" min="0" step="1" required value="5">
 
-      <label for="productPrice">Selling price per item</label>
-      <input id="productPrice" type="number" min="0"
-        step="0.01" required placeholder="e.g. 500">
+              <button class="btn primary" id="saveProductBtn" type="submit">Save Product</button>
+            </form>
 
-      <label for="productLowStock">Low-stock warning level</label>
-      <input id="productLowStock" type="number" min="0"
-        step="1" required value="5">
+            <p class="status" id="inventoryMessage" role="status"></p>
+          </section>
 
-      <button class="btn primary" id="saveProductBtn" type="submit">
-        Save Product
-      </button>
-    </form>
+          <section class="panel" style="margin-top:20px;">
+            <h2 class="section-title">Your Products</h2>
+            <label for="productSearch">Search products</label>
+            <input id="productSearch" type="search" placeholder="Search by name, code or category">
 
-    <p class="status" id="inventoryMessage" role="status"></p>
-  </section>
-
-  <section class="panel" style="margin-top:20px;">
-    <h2 class="section-title">Your Products</h2>
-    <label for="productSearch">Search products</label>
-    <input id="productSearch" type="search"
-      placeholder="Search by name, code or category">
-
-    <div id="inventoryProductList" style="margin-top:18px;">
-      <p class="muted">Your products will appear here.</p>
-    </div>
-  </section>
-</section>
-```
+            <div id="inventoryProductList" style="margin-top:18px;">
+              <p class="muted">Your products will appear here.</p>
+            </div>
+          </section>
+        </section>
 
         <section id="view-customers" class="view hidden">
           <div class="page-heading">
@@ -482,6 +470,7 @@
       signInWithEmailAndPassword,
       createUserWithEmailAndPassword,
       onAuthStateChanged,
+      sendPasswordResetEmail,
       signOut
     } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
 
@@ -521,8 +510,9 @@
     let currentProfile = null;
     let transactions = [];
     let unsubscribeTransactions = null;
-    let unsubscribeProducts = null;
     let products = [];
+    let unsubscribeProducts = null;
+
     /* ---------- Helpers ---------- */
 
     function showMessage(id, text) {
@@ -630,6 +620,7 @@
       $("expenseTotal").textContent = format(expenses);
       $("balanceTotal").textContent = format(income - expenses);
       $("transactionAmountLabel").textContent = "Amount (" + currency + ")";
+      renderInventory();
     }
 
     /* ---------- Transactions ---------- */
@@ -691,117 +682,7 @@
         unsubscribeTransactions = null;
       }
     }
-    /* ---------- Retail inventory ---------- */
 
-    function formatInventoryMoney(amount) {
-      return currentCurrency() + " " + Number(amount || 0).toLocaleString(
-        undefined,
-        { minimumFractionDigits: 2, maximumFractionDigits: 2 }
-      );
-    }
-
-    function escapeInventoryText(value) {
-      return String(value ?? "").replace(/[&<>"']/g, character => ({
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#39;"
-      })[character]);
-    }
-
-    function renderInventory() {
-      const search = ($("productSearch")?.value || "").trim().toLowerCase();
-
-      const lowStockProducts = products.filter(product =>
-        Number(product.quantity || 0) <= Number(product.lowStockThreshold || 0)
-      );
-
-      const stockValue = products.reduce((total, product) =>
-        total + Number(product.quantity || 0) * Number(product.costPrice || 0), 0
-      );
-
-      $("inventoryProductCount").textContent = products.length;
-      $("inventoryLowStockCount").textContent = lowStockProducts.length;
-      $("inventoryStockValue").textContent = formatInventoryMoney(stockValue);
-
-      const list = $("inventoryProductList");
-      if (!list) return;
-
-      const filteredProducts = products.filter(product =>
-        [product.name, product.sku, product.category]
-          .some(value => String(value || "").toLowerCase().includes(search))
-      );
-
-      if (filteredProducts.length === 0) {
-        list.innerHTML = products.length
-          ? '<p class="muted">No products match your search.</p>'
-          : '<p class="muted">No products yet. Add your first product above.</p>';
-        return;
-      }
-
-      list.innerHTML = filteredProducts.map(product => {
-        const quantity = Number(product.quantity || 0);
-        const threshold = Number(product.lowStockThreshold || 0);
-        const isLow = quantity <= threshold;
-
-        return `
-          <article class="panel" style="margin-bottom:12px;">
-            <h3>${escapeInventoryText(product.name)}</h3>
-            <p class="muted">
-              Code: ${escapeInventoryText(product.sku || "—")}
-              | Category: ${escapeInventoryText(product.category)}
-            </p>
-            <p>Quantity in stock: <strong>${quantity}</strong></p>
-            <p>Cost per item: ${formatInventoryMoney(product.costPrice)}</p>
-            <p>Selling price: ${formatInventoryMoney(product.sellingPrice)}</p>
-            <p>Stock value: <strong>${formatInventoryMoney(quantity * Number(product.costPrice || 0))}</strong></p>
-            <p>${isLow
-              ? '<strong style="color:#b45309;">Low stock — reorder soon</strong>'
-              : '<span>Stock level OK</span>'}</p>
-            <button type="button" class="btn"
-              data-adjust-stock="${escapeInventoryText(product.id)}">
-              Adjust stock
-            </button>
-          </article>
-        `;
-      }).join("");
-    }
-
-    function stopListeningToProducts() {
-      if (unsubscribeProducts) {
-        unsubscribeProducts();
-        unsubscribeProducts = null;
-      }
-    }
-
-    function listenToProducts() {
-      stopListeningToProducts();
-
-      const user = auth.currentUser;
-      if (!user) {
-        products = [];
-        renderInventory();
-        return;
-      }
-
-      const productsCollection = collection(db, "users", user.uid, "products");
-
-      unsubscribeProducts = onSnapshot(
-        productsCollection,
-        snapshot => {
-          products = snapshot.docs.map(item => ({
-            id: item.id,
-            ...item.data()
-          }));
-          renderInventory();
-        },
-        error => {
-          console.error("Inventory loading error:", error);
-          showMessage("inventoryMessage", "Could not load products: " + error.message);
-        }
-      );
-    }
     function listenToTransactions() {
       stopListeningToTransactions();
 
@@ -928,6 +809,206 @@
         console.error(error);
         showMessage("transactionMessage", "Could not delete: " + error.message);
         button.disabled = false;
+      }
+    });
+
+    /* ---------- Retail inventory ---------- */
+
+    function formatMoney(amount) {
+      return currentCurrency() + " " + formatNumber(amount);
+    }
+
+    function renderInventory() {
+      const search = $("productSearch").value.trim().toLowerCase();
+
+      const lowStock = products.filter(p =>
+        Number(p.quantity || 0) <= Number(p.lowStockThreshold || 0)
+      );
+
+      const stockValue = products.reduce((total, p) =>
+        total + Number(p.quantity || 0) * Number(p.costPrice || 0), 0
+      );
+
+      $("inventoryProductCount").textContent = products.length;
+      $("inventoryLowStockCount").textContent = lowStock.length;
+      $("inventoryStockValue").textContent = formatMoney(stockValue);
+
+      const list = $("inventoryProductList");
+
+      const filtered = products.filter(p =>
+        [p.name, p.sku, p.category].some(value =>
+          String(value || "").toLowerCase().includes(search)
+        )
+      );
+
+      if (filtered.length === 0) {
+        list.innerHTML = products.length
+          ? '<p class="muted">No products match your search.</p>'
+          : '<p class="muted">No products yet. Add your first product above.</p>';
+        return;
+      }
+
+      list.innerHTML = filtered.map(p => {
+        const quantity = Number(p.quantity || 0);
+        const isLow = quantity <= Number(p.lowStockThreshold || 0);
+
+        return `
+          <article class="panel transaction-item">
+            <h3 style="margin-bottom:6px;">${escapeText(p.name)}</h3>
+            <p class="muted" style="margin-bottom:8px;">
+              Code: ${escapeText(p.sku || "—")} | Category: ${escapeText(p.category)}
+            </p>
+            <p>In stock: <strong>${quantity}</strong></p>
+            <p>Cost: ${formatMoney(p.costPrice)} | Selling price: ${formatMoney(p.sellingPrice)}</p>
+            <p>Stock value: <strong>${formatMoney(quantity * Number(p.costPrice || 0))}</strong></p>
+            <p>${isLow
+              ? '<strong style="color:#b45309;">Low stock: reorder soon</strong>'
+              : '<span class="muted">Stock level OK</span>'}</p>
+            <button type="button" class="btn secondary" data-adjust-stock="${escapeText(p.id)}">Adjust stock</button>
+            <button type="button" class="btn outline" data-delete-product="${escapeText(p.id)}">Delete</button>
+          </article>
+        `;
+      }).join("");
+    }
+
+    function stopListeningToProducts() {
+      if (unsubscribeProducts) {
+        unsubscribeProducts();
+        unsubscribeProducts = null;
+      }
+    }
+
+    function listenToProducts() {
+      stopListeningToProducts();
+
+      const user = auth.currentUser;
+      if (!user) {
+        products = [];
+        renderInventory();
+        return;
+      }
+
+      unsubscribeProducts = onSnapshot(
+        collection(db, "users", user.uid, "products"),
+        snapshot => {
+          products = snapshot.docs
+            .map(item => ({ id: item.id, ...item.data() }))
+            .sort((a, b) => String(a.name || "").localeCompare(String(b.name || "")));
+          renderInventory();
+        },
+        error => {
+          console.error("Inventory loading error:", error);
+          showMessage("inventoryMessage", "Could not load products: " + error.message);
+        }
+      );
+    }
+
+    $("productForm").addEventListener("submit", async event => {
+      event.preventDefault();
+
+      const user = auth.currentUser;
+      if (!user) {
+        showMessage("inventoryMessage", "Please log in again.");
+        return;
+      }
+
+      const name = $("productName").value.trim();
+      const sku = $("productSku").value.trim();
+      const category = $("productCategory").value.trim();
+      const quantity = Number($("productQuantity").value);
+      const costPrice = Number($("productCost").value);
+      const sellingPrice = Number($("productPrice").value);
+      const lowStockThreshold = Number($("productLowStock").value);
+
+      if (!name || !category) {
+        showMessage("inventoryMessage", "Enter a product name and category.");
+        return;
+      }
+
+      if (
+        !Number.isInteger(quantity) || quantity < 0 ||
+        !Number.isFinite(costPrice) || costPrice < 0 ||
+        !Number.isFinite(sellingPrice) || sellingPrice < 0 ||
+        !Number.isInteger(lowStockThreshold) || lowStockThreshold < 0
+      ) {
+        showMessage("inventoryMessage", "Check the quantity, prices and low-stock level.");
+        return;
+      }
+
+      const button = $("saveProductBtn");
+      button.disabled = true;
+      button.textContent = "Saving...";
+
+      try {
+        await addDoc(collection(db, "users", user.uid, "products"), {
+          name,
+          sku,
+          category,
+          quantity,
+          costPrice,
+          sellingPrice,
+          lowStockThreshold,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        });
+
+        $("productForm").reset();
+        showMessage("inventoryMessage", "Product saved.");
+      } catch (error) {
+        console.error("Product save error:", error);
+        showMessage("inventoryMessage", "Could not save product: " + error.message);
+      } finally {
+        button.disabled = false;
+        button.textContent = "Save Product";
+      }
+    });
+
+    $("productSearch").addEventListener("input", renderInventory);
+
+    $("inventoryProductList").addEventListener("click", async event => {
+      const user = auth.currentUser;
+      if (!user) return;
+
+      const adjustButton = event.target.closest("[data-adjust-stock]");
+      const deleteButton = event.target.closest("[data-delete-product]");
+
+      try {
+        if (adjustButton) {
+          const product = products.find(p => p.id === adjustButton.dataset.adjustStock);
+          if (!product) return;
+
+          const answer = prompt(
+            "New stock quantity for " + product.name + ":",
+            String(product.quantity ?? 0)
+          );
+          if (answer === null) return;
+
+          const quantity = Number(answer);
+          if (answer.trim() === "" || !Number.isInteger(quantity) || quantity < 0) {
+            showMessage("inventoryMessage", "Enter a whole number of 0 or more.");
+            return;
+          }
+
+          adjustButton.disabled = true;
+          await updateDoc(doc(db, "users", user.uid, "products", product.id), {
+            quantity,
+            updatedAt: serverTimestamp()
+          });
+          showMessage("inventoryMessage", "Stock updated.");
+        }
+
+        if (deleteButton) {
+          if (!confirm("Delete this product? This cannot be undone.")) return;
+
+          deleteButton.disabled = true;
+          await deleteDoc(doc(db, "users", user.uid, "products", deleteButton.dataset.deleteProduct));
+          showMessage("inventoryMessage", "Product deleted.");
+        }
+      } catch (error) {
+        console.error("Inventory error:", error);
+        showMessage("inventoryMessage", "Could not update: " + error.message);
+        if (adjustButton) adjustButton.disabled = false;
+        if (deleteButton) deleteButton.disabled = false;
       }
     });
 
@@ -1226,9 +1307,19 @@
           modules
         };
 
+       
         applyProfileSettings();
         updateDashboard();
         renderTransactions();
+
+        if (currentProfile?.modules?.inventory) {
+          listenToProducts();
+        } else {
+          stopListeningToProducts();
+          products = [];
+          renderInventory();
+        }
+
         showMessage("profileMessage", "Profile saved.");
         showView("overview");
       } catch (error) {
@@ -1242,12 +1333,45 @@
 
     /* ---------- Sign in and sign out ---------- */
 
+    function authMessage(error) {
+      console.error("Auth error:", error.code, error.message);
+
+      switch (error.code) {
+        case "auth/invalid-credential":
+        case "auth/invalid-login-credentials":
+        case "auth/wrong-password":
+        case "auth/user-not-found":
+          return "Wrong email or password. If you have not signed up yet, click Create an Account.";
+        case "auth/invalid-email":
+          return "That email address does not look right.";
+        case "auth/email-already-in-use":
+          return "An account with this email already exists. Log in instead, or click Forgot password. If you signed up with Google, use Continue with Google.";
+        case "auth/weak-password":
+          return "Choose a password of at least 6 characters.";
+        case "auth/too-many-requests":
+          return "Too many attempts. Wait a few minutes and try again, or reset your password.";
+        case "auth/network-request-failed":
+          return "No internet connection. Check your network and try again.";
+        case "auth/operation-not-allowed":
+          return "Email sign-in is not turned on. In the Firebase console, open Authentication, then Sign-in method, and enable Email/Password.";
+        case "auth/unauthorized-domain":
+          return "This website is not authorized in Firebase. Add its domain under Authentication, Settings, Authorized domains.";
+        case "auth/popup-closed-by-user":
+        case "auth/cancelled-popup-request":
+          return "The sign-in window was closed before finishing.";
+        case "auth/popup-blocked":
+          return "Your browser blocked the sign-in window. Allow pop-ups for this site and try again.";
+        default:
+          return "Sign-in failed (" + (error.code || "unknown error") + "). Please try again.";
+      }
+    }
+
     $("googleBtn").addEventListener("click", async () => {
       showMessage("message", "");
       try {
         await signInWithPopup(auth, new GoogleAuthProvider());
       } catch (error) {
-        showMessage("message", error.message);
+        showMessage("message", authMessage(error));
       }
     });
 
@@ -1258,7 +1382,7 @@
       try {
         await signInWithEmailAndPassword(auth, $("email").value.trim(), $("password").value);
       } catch (error) {
-        showMessage("message", error.message);
+        showMessage("message", authMessage(error));
       }
     });
 
@@ -1275,7 +1399,23 @@
         showMessage("message", "");
         await createUserWithEmailAndPassword(auth, email, password);
       } catch (error) {
-        showMessage("message", error.message);
+        showMessage("message", authMessage(error));
+      }
+    });
+
+    $("forgotBtn").addEventListener("click", async () => {
+      const email = $("email").value.trim();
+
+      if (!email) {
+        showMessage("message", "Type your email address above first, then click Forgot password.");
+        return;
+      }
+
+      try {
+        await sendPasswordResetEmail(auth, email);
+        showMessage("message", "If an account exists for that email, a reset link has been sent. Check your inbox and spam folder.");
+      } catch (error) {
+        showMessage("message", authMessage(error));
       }
     });
 
@@ -1319,17 +1459,30 @@
 
       if (user) {
         $("userEmail").textContent = user.email || user.displayName || "Signed in";
+       
         await loadProfile(user);
         resetTransactionForm();
         listenToTransactions();
+
+        if (currentProfile?.modules?.inventory) {
+          listenToProducts();
+        } else {
+          stopListeningToProducts();
+          products = [];
+          renderInventory();
+        }
+
       } else {
         stopListeningToTransactions();
+        stopListeningToProducts();
+        products = [];
         currentProfile = null;
         transactions = [];
         fillProfile();
         applyProfileSettings();
         renderTransactions();
         updateDashboard();
+        renderInventory();
         showMessage("message", "");
       }
     });
