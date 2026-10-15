@@ -932,8 +932,11 @@ function getStockMovementsCollection() {
         snapshot => {
           products = snapshot.docs
             .map(item => ({ id: item.id, ...item.data() }))
-            .sort((a, b) => String(a.name || "").localeCompare(String(b.name || "")));
-          renderInventory();
+           
+.sort((a, b) => String(a.name || "").localeCompare(String(b.name || "")));
+renderInventory();
+renderMovementProductOptions();
+
         },
         error => {
           console.error("Inventory loading error:", error);
@@ -1050,6 +1053,31 @@ function getStockMovementsCollection() {
         if (deleteButton) deleteButton.disabled = false;
       }
     });
+
+function renderMovementProductOptions() {
+  const select = $("movementProduct");
+  if (!select) return;
+
+  const previousValue = select.value;
+
+  select.replaceChildren();
+
+  const placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.textContent = "Choose a product";
+  select.appendChild(placeholder);
+
+  products.forEach(product => {
+    const option = document.createElement("option");
+    option.value = product.id;
+    option.textContent = product.name;
+    select.appendChild(option);
+  });
+
+  if (products.some(product => product.id === previousValue)) {
+    select.value = previousValue;
+  }
+}
 
 $("stockMovementForm").addEventListener("submit", async event => {
   event.preventDefault();
