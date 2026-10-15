@@ -74,6 +74,14 @@
       background: white;
     }
 
+    
+    input[type="checkbox"] {
+      width: auto;
+      padding: 0;
+      margin: 0 8px 0 0;
+      vertical-align: middle;
+    }
+
     label {
       display: block;
       margin-top: 16px;
@@ -588,8 +596,7 @@
   <p id="restorePreview" class="status" role="status"></p>
 
  
-  </button>
-
+ 
   <button
     class="btn primary"
     id="restoreBackupBtn"
@@ -810,29 +817,6 @@ function updateDashboard(profile) {
     
 
 
-function fillProfile(profile = {}) {
-  $("businessName").value = profile.businessName || "";
-  $("industry").value = profile.industry || "";
-  $("currency").value = profile.currency || "KES";
-
-  $("customCategories").value =
-    Array.isArray(profile.customCategories)
-      ? profile.customCategories.join(", ")
-      : "";
-
-  $("enableExpenses").checked =
-    profile.modules?.expenses ?? true;
-
-  $("enableInventory").checked =
-    profile.modules?.inventory ?? false;
-
-  $("enableProjects").checked =
-    profile.modules?.projects ?? false;
-
-  $("enableCustomers").checked =
-    profile.modules?.customers ?? false;
-}
-
 function getTransactionsCollection() {
   const user = auth.currentUser;
 
@@ -853,6 +837,9 @@ function setTransactionDateToday() {
     String(today.getDate()).padStart(2, "0");
 }
 
+
+
+    
 
 
 $("transactionForm").addEventListener("submit", async event => {
@@ -1275,20 +1262,13 @@ if (restoreBackupButton) {
   );
 }
     
+
 const restoreFileInput = $("restoreBackupFile");
 
 if (restoreFileInput) {
-  restoreFileInput.addEventListener("change", () => {
-    previewedBizoraBackup = null;
-
-    const restoreButton = $("restoreBackupBtn");
-    if (restoreButton) restoreButton.disabled = true;
-
-    $("restorePreview").textContent = "";
-    $("restoreMessage").textContent =
-      "Preview the selected backup before restoring.";
-  });
+  restoreFileInput.addEventListener("change", previewBizoraBackup);
 }
+
 
 const transactionList = $("transactionList");
 
@@ -1318,6 +1298,7 @@ if (transactionList) {
     }
   });
 }
+
 
      
 
@@ -1366,11 +1347,29 @@ function listenToTransactions() {
 
 
 
-    function fillProfile(profile = {}) {
-      $("businessName").value = profile.businessName || "";
-      $("industry").value = profile.industry || "";
-      $("currency").value = profile.currency || "KES";
-    }
+  
+function fillProfile(profile = {}) {
+  $("businessName").value = profile.businessName || "";
+  $("industry").value = profile.industry || "";
+  $("currency").value = profile.currency || "KES";
+
+  $("customCategories").value =
+    Array.isArray(profile.customCategories)
+      ? profile.customCategories.join(", ")
+      : "";
+
+  $("enableExpenses").checked =
+    profile.modules?.expenses ?? true;
+
+  $("enableInventory").checked =
+    profile.modules?.inventory ?? false;
+
+  $("enableProjects").checked =
+    profile.modules?.projects ?? false;
+
+  $("enableCustomers").checked =
+    profile.modules?.customers ?? false;
+}
 
     async function loadProfile(user) {
       showMessage("dashboardMessage", "Loading your business...");
@@ -1462,7 +1461,17 @@ function listenToTransactions() {
       const businessName = $("businessName").value.trim();
       const industry = $("industry").value;
       const currency = $("currency").value;
+const customCategories = $("customCategories").value
+  .split(",")
+  .map(category => category.trim())
+  .filter(Boolean);
 
+const modules = {
+  expenses: $("enableExpenses").checked,
+  inventory: $("enableInventory").checked,
+  projects: $("enableProjects").checked,
+  customers: $("enableCustomers").checked
+};
       if (!businessName || !industry || !currency) {
         showMessage("profileMessage", "Complete all fields first.");
         return;
