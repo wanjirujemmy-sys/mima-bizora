@@ -501,6 +501,39 @@
                 <option value="EUR">EUR — Euro</option>
               </select>
 
+<label for="customCategories">Business categories (comma-separated)</label>
+<input
+  id="customCategories"
+  type="text"
+  placeholder="e.g. Sales, Stock, Transport, Rent"
+>
+
+<p class="muted">
+  Enter categories that suit your business, separated by commas.
+</p>
+
+<h3>Business tools</h3>
+
+<label>
+  <input type="checkbox" id="enableExpenses" checked>
+  Expense tracking
+</label>
+
+<label>
+  <input type="checkbox" id="enableInventory">
+  Stock and inventory
+</label>
+
+<label>
+  <input type="checkbox" id="enableProjects">
+  Project and labour tracking
+</label>
+
+<label>
+  <input type="checkbox" id="enableCustomers">
+  Customer records
+</label>
+
               <button class="btn primary" id="saveBtn" type="submit">
                 Save Business Profile
               </button>
@@ -776,6 +809,30 @@ function updateDashboard(profile) {
 
     
 
+
+function fillProfile(profile = {}) {
+  $("businessName").value = profile.businessName || "";
+  $("industry").value = profile.industry || "";
+  $("currency").value = profile.currency || "KES";
+
+  $("customCategories").value =
+    Array.isArray(profile.customCategories)
+      ? profile.customCategories.join(", ")
+      : "";
+
+  $("enableExpenses").checked =
+    profile.modules?.expenses ?? true;
+
+  $("enableInventory").checked =
+    profile.modules?.inventory ?? false;
+
+  $("enableProjects").checked =
+    profile.modules?.projects ?? false;
+
+  $("enableCustomers").checked =
+    profile.modules?.customers ?? false;
+}
+
 function getTransactionsCollection() {
   const user = auth.currentUser;
 
@@ -786,6 +843,7 @@ function getTransactionsCollection() {
   return collection(db, "users", user.uid, "transactions");
 }
 
+    
 function setTransactionDateToday() {
   const today = new Date();
 
@@ -1418,23 +1476,28 @@ function listenToTransactions() {
       try {
         const profileRef = doc(db, "users", user.uid);
 
-        await setDoc(profileRef, {
-          uid: user.uid,
-          email: user.email || "",
-          businessName,
-          industry,
-          currency,
-          updatedAt: serverTimestamp()
-        }, { merge: true });
+   await setDoc(profileRef, {
+  uid: user.uid,
+  email: user.email || "",
+  businessName,
+  industry,
+  currency,
+  customCategories,
+  modules,
+  updatedAt: serverTimestamp()
+}, { merge: true });
+       
+currentProfile = {
+  ...currentProfile,
+  uid: user.uid,
+  email: user.email || "",
+  businessName,
+  industry,
+  currency,
+  customCategories,
+  modules
+};
 
-        currentProfile = {
-          ...currentProfile,
-          uid: user.uid,
-          email: user.email || "",
-          businessName,
-          industry,
-          currency
-        };
 
         updateDashboard(currentProfile);
         showMessage("profileMessage", "Profile saved successfully!");
