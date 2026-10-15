@@ -515,6 +515,13 @@
 
     /* ---------- Helpers ---------- */
 
+function getStockMovementsCollection() {
+  const user = auth.currentUser;
+  if (!user) throw new Error("Please sign in first.");
+
+  return collection(db, "users", user.uid, "stockMovements");
+}
+
     function showMessage(id, text) {
       $(id).textContent = text;
     }
