@@ -1585,9 +1585,50 @@ $("stockMovementForm").addEventListener("submit", async event => {
         };
 
        
-        applyProfileSettings();
+              applyProfileSettings();
         updateDashboard();
         renderTransactions();
+
+        showView("overview");
+        showMessage("profileMessage", "Business profile saved.");
+      } catch (error) {
+        console.error("Profile save error:", error);
+        showMessage("profileMessage", "Could not save profile: " + error.message);
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = "Save Business Profile";
+      }
+    });
+
+    function authMessage(error) {
+      switch (error.code) {
+        case "auth/invalid-login-credentials":
+        case "auth/wrong-password":
+        case "auth/user-not-found":
+          return "Wrong email or password. If you have not signed up yet, click Create an Account.";
+        case "auth/invalid-email":
+          return "That email address does not look right.";
+        case "auth/email-already-in-use":
+          return "An account with this email already exists. Log in instead, or click Forgot password. If you signed up with Google, use Continue with Google.";
+        case "auth/weak-password":
+          return "Choose a password of at least 6 characters.";
+        case "auth/too-many-requests":
+          return "Too many attempts. Wait a few minutes and try again, or reset your password.";
+        case "auth/network-request-failed":
+          return "No internet connection. Check your network and try again.";
+        case "auth/operation-not-allowed":
+          return "Email sign-in is not turned on. In Firebase Authentication, enable Email/Password.";
+        case "auth/unauthorized-domain":
+          return "This website is not authorized in Firebase. Add its domain under Authentication settings.";
+        case "auth/popup-closed-by-user":
+        case "auth/cancelled-popup-request":
+          return "The sign-in window was closed before finishing.";
+        case "auth/popup-blocked":
+          return "Your browser blocked the sign-in window. Allow pop-ups for this site and try again.";
+        default:
+          return "Sign-in failed (" + (error.code || "unknown error") + "). Please try again.";
+      }
+    }
 
       
 
