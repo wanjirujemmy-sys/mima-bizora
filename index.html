@@ -440,8 +440,38 @@
               <p class="muted">Your products will appear here.</p>
             </div>
           </section>
+          
+          </section>
+
+          <section class="panel" style="margin-top:20px;">
+            <h2 class="section-title">Record Stock Movement</h2>
+            <form id="stockMovementForm" class="profile-form">
+              <label for="movementProduct">Product</label>
+              <select id="movementProduct" required>
+                <option value="">Choose a product</option>
+              </select>
+
+              <label for="movementType">Movement type</label>
+              <select id="movementType" required>
+                <option value="in">Stock coming in</option>
+                <option value="out">Stock going out</option>
+              </select>
+
+              <label for="movementQuantity">Quantity</label>
+              <input id="movementQuantity" type="number" min="1" step="1" required placeholder="Enter quantity">
+
+              <label for="movementReason">Reason</label>
+              <input id="movementReason" maxlength="200" required placeholder="e.g. New delivery, sale, damaged items">
+
+              <button class="btn primary" id="saveMovementBtn" type="submit">Record Movement</button>
+            </form>
+
+            <p class="status" id="stockMovementMessage" role="status"></p>
+          </section>
+
         </section>
 
+  
         <section id="view-customers" class="view hidden">
           <div class="page-heading">
             <div><h1>Customers</h1><p>Your customer list and history.</p></div>
