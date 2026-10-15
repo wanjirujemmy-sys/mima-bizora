@@ -206,7 +206,7 @@
               </button>
               <button class="action-card" type="button" data-view="inventory">
                 <strong>▦ Inventory</strong>
-                <span>Manage products and stock in a future update.</span>
+                <span>Manage products and stock.</span>
               </button>
               <button class="action-card" type="button" data-view="reports">
                 <strong>▤ Reports</strong>
@@ -373,7 +373,7 @@
           </section>
         </section>
 
-        <!-- COMING SOON PAGES -->
+        <!-- INVENTORY -->
         <section id="view-inventory" class="view hidden">
           <div class="page-heading">
             <div>
@@ -440,8 +440,6 @@
               <p class="muted">Your products will appear here.</p>
             </div>
           </section>
-          
-          </section>
 
           <section class="panel" style="margin-top:20px;">
             <h2 class="section-title">Record Stock Movement</h2>
@@ -466,25 +464,20 @@
               <button class="btn primary" id="saveMovementBtn" type="submit">Record Movement</button>
             </form>
 
-     
-<p class="status" id="stockMovementMessage" role="status"></p>
-</section>
+            <p class="status" id="stockMovementMessage" role="status"></p>
+          </section>
 
-<section class="panel" style="margin-top:20px;">
-  <h2 class="section-title">Stock Movement History</h2>
-  <p class="muted">
-    Review stock received, stock issued, and inventory adjustments.
-  </p>
-  <div id="stockMovementHistory" aria-live="polite">
-    <p class="muted">Loading stock movement history...</p>
-  </div>
+          <section class="panel" style="margin-top:20px;">
+            <h2 class="section-title">Stock Movement History</h2>
+            <p class="muted">Review stock received, stock issued, and inventory adjustments.</p>
+            <div id="stockMovementHistory" aria-live="polite">
+              <p class="muted">No stock movements recorded yet.</p>
+            </div>
+          </section>
+        </section>
 
-</section>
-
-</section>
-
-<section id="view-customers" class="view hidden">
-
+        <!-- COMING SOON PAGES -->
+        <section id="view-customers" class="view hidden">
           <div class="page-heading">
             <div><h1>Customers</h1><p>Your customer list and history.</p></div>
           </div>
@@ -516,24 +509,22 @@
       signOut
     } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
 
-  
-import {
-  getFirestore,
-  Timestamp,
-  doc,
-  getDoc,
-  setDoc,
-  serverTimestamp,
-  collection,
-  addDoc,
-  onSnapshot,
-  query,
-  orderBy,
-  deleteDoc,
-  getDocs,
-  updateDoc,
-  runTransaction
-} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+    import {
+      getFirestore,
+      Timestamp,
+      doc,
+      getDoc,
+      setDoc,
+      serverTimestamp,
+      collection,
+      addDoc,
+      onSnapshot,
+      query,
+      orderBy,
+      deleteDoc,
+      getDocs,
+      runTransaction
+    } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCgVfPDwrdICBQIoyvvO_eJQqKcLRWZJbU",
@@ -556,18 +547,10 @@ import {
     let unsubscribeTransactions = null;
     let products = [];
     let unsubscribeProducts = null;
-
-let unsubscribeStockMovements = null;
-let stockMovements = [];
+    let stockMovements = [];
+    let unsubscribeStockMovements = null;
 
     /* ---------- Helpers ---------- */
-
-function getStockMovementsCollection() {
-  const user = auth.currentUser;
-  if (!user) throw new Error("Please sign in first.");
-
-  return collection(db, "users", user.uid, "stockMovements");
-}
 
     function showMessage(id, text) {
       $(id).textContent = text;
@@ -872,6 +855,12 @@ function getStockMovementsCollection() {
       return currentCurrency() + " " + formatNumber(amount);
     }
 
+    function getStockMovementsCollection() {
+      const user = auth.currentUser;
+      if (!user) throw new Error("Please sign in first.");
+      return collection(db, "users", user.uid, "stockMovements");
+    }
+
     function renderInventory() {
       const search = $("productSearch").value.trim().toLowerCase();
 
@@ -925,6 +914,80 @@ function getStockMovementsCollection() {
       }).join("");
     }
 
+    function renderMovementProductOptions() {
+      const select = $("movementProduct");
+      if (!select) return;
+
+      const previousValue = select.value;
+
+      select.replaceChildren();
+
+      const placeholder = document.createElement("option");
+      placeholder.value = "";
+      placeholder.textContent = "Choose a product";
+      select.appendChild(placeholder);
+
+      products.forEach(product => {
+        const option = document.createElement("option");
+        option.value = product.id;
+        option.textContent = product.name;
+        select.appendChild(option);
+      });
+
+      if (products.some(product => product.id === previousValue)) {
+        select.value = previousValue;
+      }
+    }
+
+    function movementLabel(type) {
+      if (type === "in") return "Stock coming in";
+      if (type === "out") return "Stock going out";
+      return "Stock adjustment";
+    }
+
+    function renderStockMovementHistory() {
+      const container = $("stockMovementHistory");
+      if (!container) return;
+
+      if (stockMovements.length === 0) {
+        container.innerHTML = '<p class="muted">No stock movements recorded yet.</p>';
+        return;
+      }
+
+      container.replaceChildren();
+
+      stockMovements.forEach(movement => {
+        const entry = document.createElement("article");
+        entry.className = "panel";
+        entry.style.marginTop = "12px";
+
+        const title = document.createElement("h3");
+        title.textContent = movement.productName || "Unknown product";
+
+        const details = document.createElement("p");
+        details.textContent =
+          movementLabel(movement.type) +
+          " · Quantity: " + movement.quantity +
+          " · Reason: " + (movement.reason || "Not provided");
+
+        const balance = document.createElement("p");
+        balance.textContent =
+          "Previous balance: " + movement.previousQuantity +
+          " · New balance: " + movement.newQuantity;
+
+        const date = document.createElement("p");
+        date.className = "muted";
+
+        const createdAt = movement.createdAt;
+        date.textContent = createdAt && typeof createdAt.toDate === "function"
+          ? createdAt.toDate().toLocaleString()
+          : "Date unavailable";
+
+        entry.append(title, details, balance, date);
+        container.appendChild(entry);
+      });
+    }
+
     function stopListeningToProducts() {
       if (unsubscribeProducts) {
         unsubscribeProducts();
@@ -932,41 +995,36 @@ function getStockMovementsCollection() {
       }
     }
 
-    
-      
-function stopListeningToStockMovements() {
-  if (unsubscribeStockMovements) {
-    unsubscribeStockMovements();
-    unsubscribeStockMovements = null;
-  }
+    function stopListeningToStockMovements() {
+      if (unsubscribeStockMovements) {
+        unsubscribeStockMovements();
+        unsubscribeStockMovements = null;
+      }
 
-  stockMovements = [];
-  renderStockMovementHistory();
-}
-function listenToProducts() {
+      stockMovements = [];
+      renderStockMovementHistory();
+    }
+
+    function listenToProducts() {
       stopListeningToProducts();
 
       const user = auth.currentUser;
-    
-if (!user) {
-  products = [];
-  renderInventory();
-  renderMovementProductOptions();
-  return;
-}
 
-      
+      if (!user) {
+        products = [];
+        renderInventory();
+        renderMovementProductOptions();
+        return;
+      }
 
       unsubscribeProducts = onSnapshot(
         collection(db, "users", user.uid, "products"),
         snapshot => {
           products = snapshot.docs
             .map(item => ({ id: item.id, ...item.data() }))
-           
-.sort((a, b) => String(a.name || "").localeCompare(String(b.name || "")));
-renderInventory();
-renderMovementProductOptions();
-
+            .sort((a, b) => String(a.name || "").localeCompare(String(b.name || "")));
+          renderInventory();
+          renderMovementProductOptions();
         },
         error => {
           console.error("Inventory loading error:", error);
@@ -975,43 +1033,46 @@ renderMovementProductOptions();
       );
     }
 
-    
-function listenToStockMovements() {
-  stopListeningToStockMovements();
+    function listenToStockMovements() {
+      stopListeningToStockMovements();
 
-  const user = auth.currentUser;
+      const user = auth.currentUser;
 
-  if (!user) {
-    stockMovements = [];
-    renderStockMovementHistory();
-    return;
-  }
+      if (!user) {
+        stockMovements = [];
+        renderStockMovementHistory();
+        return;
+      }
 
-  unsubscribeStockMovements = onSnapshot(
-    query(
-      getStockMovementsCollection(),
-      orderBy("createdAt", "desc")
-    ),
-    snapshot => {
-      stockMovements = snapshot.docs.map(item => ({
-        id: item.id,
-        ...item.data()
-      }));
+      unsubscribeStockMovements = onSnapshot(
+        query(getStockMovementsCollection(), orderBy("createdAt", "desc")),
+        snapshot => {
+          stockMovements = snapshot.docs.map(item => ({ id: item.id, ...item.data() }));
+          renderStockMovementHistory();
+        },
+        error => {
+          console.error("Stock movement history loading error:", error);
+          const container = $("stockMovementHistory");
+          if (container) {
+            container.textContent = "Could not load stock movement history: " + error.message;
+          }
+        }
+      );
+    }
 
-      renderStockMovementHistory();
-    },
-    error => {
-      console.error("Stock movement history loading error:", error);
-
-      const container = $("stockMovementHistory");
-
-      if (container) {
-        container.textContent =
-          "Could not load stock movement history: " + error.message;
+    // Starts or stops the inventory listeners depending on the Inventory tool setting.
+    function syncInventoryListeners() {
+      if (currentProfile?.modules?.inventory) {
+        listenToProducts();
+        listenToStockMovements();
+      } else {
+        stopListeningToProducts();
+        stopListeningToStockMovements();
+        products = [];
+        renderInventory();
+        renderMovementProductOptions();
       }
     }
-  );
-}
 
     $("productForm").addEventListener("submit", async event => {
       event.preventDefault();
@@ -1063,6 +1124,8 @@ function listenToStockMovements() {
         });
 
         $("productForm").reset();
+        $("productQuantity").value = "0";
+        $("productLowStock").value = "5";
         showMessage("inventoryMessage", "Product saved.");
       } catch (error) {
         console.error("Product save error:", error);
@@ -1074,6 +1137,49 @@ function listenToStockMovements() {
     });
 
     $("productSearch").addEventListener("input", renderInventory);
+
+    // Sets a product to an exact quantity and records the change in stock history.
+    async function adjustStockWithMovement(productId, newQuantity) {
+      const user = auth.currentUser;
+      if (!user) throw new Error("Please log in again.");
+
+      const productRef = doc(db, "users", user.uid, "products", productId);
+      const movementRef = doc(getStockMovementsCollection());
+
+      return runTransaction(db, async transaction => {
+        const productSnap = await transaction.get(productRef);
+
+        if (!productSnap.exists()) {
+          throw new Error("Product not found. Please refresh and try again.");
+        }
+
+        const product = productSnap.data();
+        const currentQuantity = Number(product.quantity ?? 0);
+        const change = newQuantity - currentQuantity;
+
+        if (change === 0) return false;
+
+        transaction.update(productRef, {
+          quantity: newQuantity,
+          updatedAt: serverTimestamp()
+        });
+
+        transaction.set(movementRef, {
+          productId,
+          productName: product.name || "",
+          type: "adjustment",
+          quantity: Math.abs(change),
+          change,
+          reason: "Manual stock adjustment",
+          previousQuantity: currentQuantity,
+          newQuantity,
+          createdAt: serverTimestamp(),
+          createdBy: user.uid
+        });
+
+        return true;
+      });
+    }
 
     $("inventoryProductList").addEventListener("click", async event => {
       const user = auth.currentUser;
@@ -1100,11 +1206,9 @@ function listenToStockMovements() {
           }
 
           adjustButton.disabled = true;
-          await updateDoc(doc(db, "users", user.uid, "products", product.id), {
-            quantity,
-            updatedAt: serverTimestamp()
-          });
-          showMessage("inventoryMessage", "Stock updated.");
+          const changed = await adjustStockWithMovement(product.id, quantity);
+          adjustButton.disabled = false;
+          showMessage("inventoryMessage", changed ? "Stock updated." : "Quantity is unchanged.");
         }
 
         if (deleteButton) {
@@ -1122,172 +1226,86 @@ function listenToStockMovements() {
       }
     });
 
-function renderMovementProductOptions() {
-  const select = $("movementProduct");
-  if (!select) return;
+    $("stockMovementForm").addEventListener("submit", async event => {
+      event.preventDefault();
 
-  const previousValue = select.value;
+      const user = auth.currentUser;
 
-  select.replaceChildren();
-
-  const placeholder = document.createElement("option");
-  placeholder.value = "";
-  placeholder.textContent = "Choose a product";
-  select.appendChild(placeholder);
-
-  products.forEach(product => {
-    const option = document.createElement("option");
-    option.value = product.id;
-    option.textContent = product.name;
-    select.appendChild(option);
-  });
-
-  if (products.some(product => product.id === previousValue)) {
-    select.value = previousValue;
-  }
-}
-
-function renderStockMovementHistory() {
-  const container = $("stockMovementHistory");
-  if (!container) return;
-
-  if (stockMovements.length === 0) {
-    container.innerHTML =
-      '<p class="muted">No stock movements recorded yet.</p>';
-    return;
-  }
-
-  container.replaceChildren();
-
-  stockMovements.forEach(movement => {
-    const entry = document.createElement("article");
-    entry.className = "panel";
-    entry.style.marginTop = "12px";
-
-    const title = document.createElement("h3");
-    title.textContent = movement.productName || "Unknown product";
-
-    const details = document.createElement("p");
-    details.textContent =
-      (movement.type === "in" ? "Stock coming in" : "Stock going out") +
-      " · Quantity: " + movement.quantity +
-      " · Reason: " + (movement.reason || "Not provided");
-
-    const balance = document.createElement("p");
-    balance.textContent =
-      "Previous balance: " + movement.previousQuantity +
-      " · New balance: " + movement.newQuantity;
-
-    const date = document.createElement("p");
-    date.className = "muted";
-
-    const createdAt = movement.createdAt;
-    date.textContent = createdAt && typeof createdAt.toDate === "function"
-      ? createdAt.toDate().toLocaleString()
-      : "Date unavailable";
-
-    entry.append(title, details, balance, date);
-    container.appendChild(entry);
-  });
-}
-
-$("stockMovementForm").addEventListener("submit", async event => {
-  event.preventDefault();
-
-  const user = auth.currentUser;
-
-  if (!user) {
-    showMessage("stockMovementMessage", "Please sign in again.");
-    return;
-  }
-
-  const productId = $("movementProduct").value;
-  const type = $("movementType").value;
-  const quantity = Number($("movementQuantity").value);
-  const reason = $("movementReason").value.trim();
-  const button = $("saveMovementBtn");
-
-  if (!productId || !reason || !Number.isInteger(quantity) || quantity < 1) {
-    showMessage("stockMovementMessage", "Choose a product and enter a valid quantity and reason.");
-    return;
-  }
-
-  const productRef = doc(
-    db,
-    "users",
-    user.uid,
-    "products",
-    productId
-  );
-
-  const movementRef = doc(getStockMovementsCollection());
-
-  button.disabled = true;
-  button.textContent = "Saving...";
-
-  try {
-    const newQuantity = await runTransaction(db, async transaction => {
-      const productSnap = await transaction.get(productRef);
-
-      if (!productSnap.exists()) {
-        throw new Error("Product not found. Please refresh and try again.");
+      if (!user) {
+        showMessage("stockMovementMessage", "Please sign in again.");
+        return;
       }
 
-      const product = productSnap.data();
-      const currentQuantity = Number(product.quantity ?? 0);
+      const productId = $("movementProduct").value;
+      const type = $("movementType").value;
+      const quantity = Number($("movementQuantity").value);
+      const reason = $("movementReason").value.trim();
+      const button = $("saveMovementBtn");
 
-      if (!Number.isInteger(currentQuantity) || currentQuantity < 0) {
-        throw new Error("The current stock quantity is invalid.");
+      if (!productId || !reason || !Number.isInteger(quantity) || quantity < 1) {
+        showMessage("stockMovementMessage", "Choose a product and enter a valid quantity and reason.");
+        return;
       }
 
-      const change = type === "in" ? quantity : -quantity;
-      const updatedQuantity = currentQuantity + change;
+      const productRef = doc(db, "users", user.uid, "products", productId);
+      const movementRef = doc(getStockMovementsCollection());
 
-      if (updatedQuantity < 0) {
-        throw new Error(
-          "Not enough stock. Current quantity: " + currentQuantity
-        );
+      button.disabled = true;
+      button.textContent = "Saving...";
+
+      try {
+        const newQuantity = await runTransaction(db, async transaction => {
+          const productSnap = await transaction.get(productRef);
+
+          if (!productSnap.exists()) {
+            throw new Error("Product not found. Please refresh and try again.");
+          }
+
+          const product = productSnap.data();
+          const currentQuantity = Number(product.quantity ?? 0);
+
+          if (!Number.isInteger(currentQuantity) || currentQuantity < 0) {
+            throw new Error("The current stock quantity is invalid.");
+          }
+
+          const change = type === "in" ? quantity : -quantity;
+          const updatedQuantity = currentQuantity + change;
+
+          if (updatedQuantity < 0) {
+            throw new Error("Not enough stock. Current quantity: " + currentQuantity);
+          }
+
+          transaction.update(productRef, {
+            quantity: updatedQuantity,
+            updatedAt: serverTimestamp()
+          });
+
+          transaction.set(movementRef, {
+            productId,
+            productName: product.name || "",
+            type,
+            quantity,
+            change,
+            reason,
+            previousQuantity: currentQuantity,
+            newQuantity: updatedQuantity,
+            createdAt: serverTimestamp(),
+            createdBy: user.uid
+          });
+
+          return updatedQuantity;
+        });
+
+        $("stockMovementForm").reset();
+        showMessage("stockMovementMessage", "Stock movement recorded. New quantity: " + newQuantity);
+      } catch (error) {
+        console.error("Stock movement error:", error);
+        showMessage("stockMovementMessage", "Could not record movement: " + error.message);
+      } finally {
+        button.disabled = false;
+        button.textContent = "Record Movement";
       }
-
-      transaction.update(productRef, {
-        quantity: updatedQuantity,
-        updatedAt: serverTimestamp()
-      });
-
-      transaction.set(movementRef, {
-        productId: productId,
-        productName: product.name || "",
-        type: type,
-        quantity: quantity,
-        change: change,
-        reason: reason,
-        previousQuantity: currentQuantity,
-        newQuantity: updatedQuantity,
-        createdAt: serverTimestamp(),
-        createdBy: user.uid
-      });
-
-      return updatedQuantity;
     });
-
-    $("stockMovementForm").reset();
-
-    showMessage(
-      "stockMovementMessage",
-      "Stock movement recorded. New quantity: " + newQuantity
-    );
-  } catch (error) {
-    console.error("Stock movement error:", error);
-
-    showMessage(
-      "stockMovementMessage",
-      "Could not record movement: " + error.message
-    );
-  } finally {
-    button.disabled = false;
-    button.textContent = "Record Movement";
-  }
-});
 
     /* ---------- Backup and restore ---------- */
 
@@ -1461,6 +1479,7 @@ $("stockMovementForm").addEventListener("submit", async event => {
         fillProfile(currentProfile);
         applyProfileSettings();
         updateDashboard();
+        syncInventoryListeners();
 
         previewedBackup = null;
         $("restoreBackupFile").value = "";
@@ -1584,10 +1603,10 @@ $("stockMovementForm").addEventListener("submit", async event => {
           modules
         };
 
-       
-              applyProfileSettings();
+        applyProfileSettings();
         updateDashboard();
         renderTransactions();
+        syncInventoryListeners();
 
         showView("overview");
         showMessage("profileMessage", "Business profile saved.");
@@ -1600,41 +1619,12 @@ $("stockMovementForm").addEventListener("submit", async event => {
       }
     });
 
+    /* ---------- Authentication ---------- */
+
     function authMessage(error) {
       switch (error.code) {
         case "auth/invalid-login-credentials":
-        case "auth/wrong-password":
-        case "auth/user-not-found":
-          return "Wrong email or password. If you have not signed up yet, click Create an Account.";
-        case "auth/invalid-email":
-          return "That email address does not look right.";
-        case "auth/email-already-in-use":
-          return "An account with this email already exists. Log in instead, or click Forgot password. If you signed up with Google, use Continue with Google.";
-        case "auth/weak-password":
-          return "Choose a password of at least 6 characters.";
-        case "auth/too-many-requests":
-          return "Too many attempts. Wait a few minutes and try again, or reset your password.";
-        case "auth/network-request-failed":
-          return "No internet connection. Check your network and try again.";
-        case "auth/operation-not-allowed":
-          return "Email sign-in is not turned on. In Firebase Authentication, enable Email/Password.";
-        case "auth/unauthorized-domain":
-          return "This website is not authorized in Firebase. Add its domain under Authentication settings.";
-        case "auth/popup-closed-by-user":
-        case "auth/cancelled-popup-request":
-          return "The sign-in window was closed before finishing.";
-        case "auth/popup-blocked":
-          return "Your browser blocked the sign-in window. Allow pop-ups for this site and try again.";
-        default:
-          return "Sign-in failed (" + (error.code || "unknown error") + "). Please try again.";
-      }
-    }
-
-      
-
-        
-        
-        case "auth/invalid-login-credentials":
+        case "auth/invalid-credential":
         case "auth/wrong-password":
         case "auth/user-not-found":
           return "Wrong email or password. If you have not signed up yet, click Create an Account.";
@@ -1755,44 +1745,28 @@ $("stockMovementForm").addEventListener("submit", async event => {
 
       if (user) {
         $("userEmail").textContent = user.email || user.displayName || "Signed in";
-       
+
         await loadProfile(user);
         resetTransactionForm();
         listenToTransactions();
-
-      
-if (currentProfile?.modules?.inventory) {
-  listenToProducts();
-  listenToStockMovements();
-} else {
-  stopListeningToProducts();
-  stopListeningToStockMovements();
-  products = [];
-  stockMovements = [];
-  renderInventory();
-  renderStockMovementHistory();
-}
-
-
-     
-
-} else {
-  stopListeningToTransactions();
-  stopListeningToProducts();
-  stopListeningToStockMovements();
-  stockMovements = [];
-  products = [];
-  currentProfile = null;
-  transactions = [];
-  fillProfile();
-  applyProfileSettings();
-  renderTransactions();
-  updateDashboard();
-  renderInventory();
-  renderStockMovementHistory();
-  showMessage("message", "");
-}
-
+        syncInventoryListeners();
+      } else {
+        stopListeningToTransactions();
+        stopListeningToProducts();
+        stopListeningToStockMovements();
+        stockMovements = [];
+        products = [];
+        currentProfile = null;
+        transactions = [];
+        fillProfile();
+        applyProfileSettings();
+        renderTransactions();
+        updateDashboard();
+        renderInventory();
+        renderMovementProductOptions();
+        renderStockMovementHistory();
+        showMessage("message", "");
+      }
     });
   </script>
 </body>
