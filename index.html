@@ -504,22 +504,24 @@
       signOut
     } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
 
-    import {
-      getFirestore,
-      Timestamp,
-      doc,
-      getDoc,
-      setDoc,
-      serverTimestamp,
-      collection,
-      addDoc,
-      onSnapshot,
-      query,
-      orderBy,
-      deleteDoc,
-      getDocs,
-      updateDoc
-    } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+  
+import {
+  getFirestore,
+  Timestamp,
+  doc,
+  getDoc,
+  setDoc,
+  serverTimestamp,
+  collection,
+  addDoc,
+  onSnapshot,
+  query,
+  orderBy,
+  deleteDoc,
+  getDocs,
+  updateDoc,
+  runTransaction
+} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCgVfPDwrdICBQIoyvvO_eJQqKcLRWZJbU",
@@ -1048,6 +1050,104 @@ function getStockMovementsCollection() {
         if (deleteButton) deleteButton.disabled = false;
       }
     });
+
+$("stockMovementForm").addEventListener("submit", async event => {
+  event.preventDefault();
+
+  const user = auth.currentUser;
+
+  if (!user) {
+    showMessage("stockMovementMessage", "Please sign in again.");
+    return;
+  }
+
+  const productId = $("movementProduct").value;
+  const type = $("movementType").value;
+  const quantity = Number($("movementQuantity").value);
+  const reason = $("movementReason").value.trim();
+  const button = $("saveMovementBtn");
+
+  if (!productId || !reason || !Number.isInteger(quantity) || quantity < 1) {
+    showMessage("stockMovementMessage", "Choose a product and enter a valid quantity and reason.");
+    return;
+  }
+
+  const productRef = doc(
+    db,
+    "users",
+    user.uid,
+    "products",
+    productId
+  );
+
+  const movementRef = doc(getStockMovementsCollection());
+
+  button.disabled = true;
+  button.textContent = "Saving...";
+
+  try {
+    const newQuantity = await runTransaction(db, async transaction => {
+      const productSnap = await transaction.get(productRef);
+
+      if (!productSnap.exists()) {
+        throw new Error("Product not found. Please refresh and try again.");
+      }
+
+      const product = productSnap.data();
+      const currentQuantity = Number(product.quantity ?? 0);
+
+      if (!Number.isInteger(currentQuantity) || currentQuantity < 0) {
+        throw new Error("The current stock quantity is invalid.");
+      }
+
+      const change = type === "in" ? quantity : -quantity;
+      const updatedQuantity = currentQuantity + change;
+
+      if (updatedQuantity < 0) {
+        throw new Error(
+          "Not enough stock. Current quantity: " + currentQuantity
+        );
+      }
+
+      transaction.update(productRef, {
+        quantity: updatedQuantity,
+        updatedAt: serverTimestamp()
+      });
+
+      transaction.set(movementRef, {
+        productId: productId,
+        productName: product.name || "",
+        type: type,
+        quantity: quantity,
+        change: change,
+        reason: reason,
+        previousQuantity: currentQuantity,
+        newQuantity: updatedQuantity,
+        createdAt: serverTimestamp(),
+        createdBy: user.uid
+      });
+
+      return updatedQuantity;
+    });
+
+    $("stockMovementForm").reset();
+
+    showMessage(
+      "stockMovementMessage",
+      "Stock movement recorded. New quantity: " + newQuantity
+    );
+  } catch (error) {
+    console.error("Stock movement error:", error);
+
+    showMessage(
+      "stockMovementMessage",
+      "Could not record movement: " + error.message
+    );
+  } finally {
+    button.disabled = false;
+    button.textContent = "Record Movement";
+  }
+});
 
     /* ---------- Backup and restore ---------- */
 
